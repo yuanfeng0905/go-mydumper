@@ -10,9 +10,10 @@
 package main
 
 import (
-	"common"
 	"fmt"
 	"strings"
+
+	"github.com/yuanfeng0905/go-mydumper/common"
 
 	ini "github.com/dlintw/goconf"
 )
