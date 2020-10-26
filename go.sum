@@ -7,5 +7,9 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/xelabs/go-mysqlstack v0.0.0-20200603045106-7ffcfc8ed3c2 h1:dht4Z+tHVYbHTH7DkXPco0TdfLVzZq+FaG8shtisCNM=
 github.com/xelabs/go-mysqlstack v0.0.0-20200603045106-7ffcfc8ed3c2/go.mod h1:m9feITJq0ZXhBKK0R5BIJa5/2XDQguOWPRvMVyV4i4A=
+github.com/yuanfeng0905/go-mysqlstack v0.0.0-20201026124108-d9118d5a5005 h1:e0pEnebx8XknqznN3S0u4VNS43HyX2QTgmzCzKv+4X8=
+github.com/yuanfeng0905/go-mysqlstack v0.0.0-20201026124108-d9118d5a5005/go.mod h1:+9jE2c+Ny1DzBnR1g8vwWgcn12WiDn37wMCL6nHEez0=
+github.com/yuanfeng0905/go-mysqlstack v1.0.0 h1:s/cf49NexP29eiv6kBO3x4qkWpozq5jQKBWUEEUUNoY=
+github.com/yuanfeng0905/go-mysqlstack v1.0.0/go.mod h1:+9jE2c+Ny1DzBnR1g8vwWgcn12WiDn37wMCL6nHEez0=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
