@@ -10,10 +10,11 @@
 package main
 
 import (
-	"common"
 	"flag"
 	"fmt"
 	"os"
+
+	"github.com/yuanfeng0905/go-mydumper/common"
 
 	"github.com/xelabs/go-mysqlstack/xlog"
 )

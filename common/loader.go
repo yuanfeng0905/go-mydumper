@@ -91,8 +91,9 @@ func restoreTableSchema(log *xlog.Log, overwrite bool, tables []string, conn *Co
 		err := conn.Execute(fmt.Sprintf("USE `%s`", db))
 		AssertNil(err)
 
-		err = conn.Execute("SET FOREIGN_KEY_CHECKS=0")
-		AssertNil(err)
+		// doris 不支持
+		// err = conn.Execute("SET FOREIGN_KEY_CHECKS=0")
+		// AssertNil(err)
 
 		data, err := ReadFile(table)
 		AssertNil(err)
@@ -130,8 +131,8 @@ func restoreTable(log *xlog.Log, table string, conn *Connection) int {
 	err := conn.Execute(fmt.Sprintf("USE `%s`", db))
 	AssertNil(err)
 
-	err = conn.Execute("SET FOREIGN_KEY_CHECKS=0")
-	AssertNil(err)
+	//err = conn.Execute("SET FOREIGN_KEY_CHECKS=0")
+	//AssertNil(err)
 
 	data, err := ReadFile(table)
 	AssertNil(err)
