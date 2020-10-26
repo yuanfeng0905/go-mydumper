@@ -194,7 +194,7 @@ func filterDatabases(log *xlog.Log, conn *Connection, filter *regexp.Regexp, inv
 
 func filterDorisTable(log *xlog.Log, conn *Connection, database string, tables []string) []string {
 	tbs := []string{}
-	inTables := "('" + strings.Join(tables, "','") + "')"
+	inTables := "table_name in ('" + strings.Join(tables, "','") + "')"
 	qr, err := conn.Fetch(fmt.Sprintf("select table_name from information_schema.tables where %s and table_schema='%s' and engine='Doris'", inTables, database))
 	AssertNil(err)
 
