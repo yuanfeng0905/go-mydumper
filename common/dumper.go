@@ -41,6 +41,13 @@ func dumpTableSchema(log *xlog.Log, conn *Connection, args *Args, database strin
 	AssertNil(err)
 	schema := qr.Rows[0][1].String() + ";\n"
 
+	// doris模式下，需要特殊处理聚合模式的表
+	if args.Mode == "doris" {
+		if strings.Index(schema, "UNIQUE KEY") != -1 {
+			schema = strings.ReplaceAll(schema, "REPLACE", "") // FIXME
+		}
+	}
+
 	file := fmt.Sprintf("%s/%s.%s-schema.sql", args.Outdir, database, table)
 	WriteFile(file, schema)
 	log.Info("dumping.table[%s.%s].schema...", database, table)
@@ -185,6 +192,19 @@ func filterDatabases(log *xlog.Log, conn *Connection, filter *regexp.Regexp, inv
 	return databases
 }
 
+func filterDorisTable(log *xlog.Log, conn *Connection, database string, tables []string) []string {
+	tbs := []string{}
+	inTables := "('" + strings.Join(tables, "','") + "')"
+	qr, err := conn.Fetch(fmt.Sprintf("select table_name from information_schema.tables where %s and table_schema='%s' and engine='Doris'", inTables, database))
+	AssertNil(err)
+
+	for _, t := range qr.Rows {
+		tbs = append(tbs, t[0].String())
+	}
+
+	return tbs
+}
+
 // Dumper used to start the dumper worker.
 func Dumper(log *xlog.Log, args *Args) {
 	pool, err := NewPool(log, args.Threads, args.Address, args.User, args.Password, args.SessionVars)
@@ -220,6 +240,11 @@ func Dumper(log *xlog.Log, args *Args) {
 			tables[i] = strings.Split(args.Table, ",")
 		} else {
 			tables[i] = allTables(log, conn, database)
+		}
+
+		// doris 模式下，需要过滤掉特殊表，只dump doris 引擎的表
+		if args.Mode == "doris" {
+			tables[i] = filterDorisTable(log, conn, database, tables[i])
 		}
 	}
 	pool.Put(conn)

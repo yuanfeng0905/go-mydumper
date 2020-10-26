@@ -27,7 +27,10 @@ func parseDumperConfig(file string) (*common.Args, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	mode, err := cfg.GetString("mysql", "mode")
+	if err != nil {
+		return nil, err
+	}
 	host, err := cfg.GetString("mysql", "host")
 	if err != nil {
 		return nil, err
@@ -112,6 +115,7 @@ func parseDumperConfig(file string) (*common.Args, error) {
 		}
 	}
 
+	args.Mode = mode
 	args.Address = fmt.Sprintf("%s:%d", host, port)
 	args.User = user
 	args.Password = password

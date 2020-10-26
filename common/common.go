@@ -19,6 +19,7 @@ import (
 
 // Args tuple.
 type Args struct {
+	Mode                 string
 	User                 string
 	Password             string
 	Address              string
