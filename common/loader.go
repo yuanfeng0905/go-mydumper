@@ -36,6 +36,7 @@ var (
 	dbSuffix     = "-schema-create.sql"
 	schemaSuffix = "-schema.sql"
 	tableSuffix  = ".sql"
+	csvSuffix    = ".csv"
 )
 
 func loadFiles(log *xlog.Log, dir string) *Files {
@@ -52,7 +53,7 @@ func loadFiles(log *xlog.Log, dir string) *Files {
 			case strings.HasSuffix(path, schemaSuffix):
 				files.schemas = append(files.schemas, path)
 			default:
-				if strings.HasSuffix(path, tableSuffix) {
+				if strings.HasSuffix(path, tableSuffix) || strings.HasSuffix(path, csvSuffix) {
 					files.tables = append(files.tables, path)
 				}
 			}
