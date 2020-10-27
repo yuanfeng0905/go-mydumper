@@ -132,7 +132,11 @@ func submitDorisTask(db string, table string, header string, body string, args *
 	req.Header.Add("columns", header)
 	req.SetBasicAuth(args.User, args.Password)
 
-	cli := http.DefaultClient
+	cli := http.Client{
+		CheckRedirect: func(req *Request, via []*Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 	resp, err := cli.Do(req)
 	if err != nil {
 		return err
