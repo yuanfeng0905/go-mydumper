@@ -158,6 +158,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 		}
 		defer resp.Body.Close()
 		b, _ := ioutil.ReadAll(resp.Body)
+		log.Info("doris response tables[%s.%s], code:%v, body:%s", db, table, resp.StatusCode, string(b))
 
 		if resp.StatusCode == 200 {
 			return nil
