@@ -31,6 +31,10 @@ func parseDumperConfig(file string) (*common.Args, error) {
 	if err != nil {
 		return nil, err
 	}
+	threads, err := cfg.GetInt("mysql", "threads")
+	if err != nil {
+		return nil, err
+	}
 	host, err := cfg.GetString("mysql", "host")
 	if err != nil {
 		return nil, err
@@ -126,7 +130,7 @@ func parseDumperConfig(file string) (*common.Args, error) {
 	args.Outdir = outdir
 	args.ChunksizeInMB = chunksizemb
 	args.SessionVars = sessionVars
-	args.Threads = 16
+	args.Threads = threads
 	args.StmtSize = 1000000
 	args.IntervalMs = 10 * 1000
 	return args, nil
