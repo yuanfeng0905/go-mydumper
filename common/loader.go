@@ -165,25 +165,6 @@ func submitDorisTask(log *xlog.Log, db string, table string, addr string, header
 	}
 	defer resp.Body.Close()
 
-	// if resp.StatusCode == 307 {
-	// 	_url, err := url.Parse(resp.Header.Get("Location")) // 重定向到BE节点
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	resp, err := _newDorisLoadRequest(_url.String(), header, body, args.User, args.Password)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	defer resp.Body.Close()
-	// 	b, _ := ioutil.ReadAll(resp.Body)
-	// 	log.Info("doris response tables[%s.%s], code:%v, body:%s", db, table, resp.StatusCode, string(b))
-
-	// 	if resp.StatusCode == 200 {
-	// 		return nil
-	// 	}
-	// 	return fmt.Errorf("doris response tables[%s.%s], code:%v, body:%s", db, table, resp.StatusCode, string(b))
-	// }
-
 	if resp.StatusCode == 200 {
 		return
 	}
@@ -218,7 +199,7 @@ func restoreDorisTable(log *xlog.Log, table string, addr string, conn *Connectio
 
 	for {
 		if err := submitDorisTask(log, db, tbl, addr, header, body, args); err != nil {
-			log.Error("submit doris load task error: %v, retry...", err)
+			log.Error("submit doris load task error[%s.%s].parts[%s].thread[%d]: %v, retry...", db, tbl, part, conn.ID, err)
 			time.Sleep(3 * time.Second)
 			continue
 		}
