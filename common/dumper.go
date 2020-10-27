@@ -113,7 +113,7 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 				}
 			}
 		}
-		r := strings.Join(values, ",") // CSV 格式，逗号分隔
+		r := strings.Join(values, "\t") // CSV 格式，\t分隔
 		rows = append(rows, r)
 
 		allRows++
