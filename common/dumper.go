@@ -356,6 +356,10 @@ func Dumper(log *xlog.Log, args *Args) {
 			wg.Add(1)
 			go func(conn *Connection, database string, table string) {
 				defer func() {
+					if err := recover(); err != nil {
+						// 线程奔溃，先记录到错误日志，再手动分析
+						log.Error(err)
+					}
 					wg.Done()
 					pool.Put(conn)
 				}()
