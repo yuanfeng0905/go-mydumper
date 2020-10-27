@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -128,7 +129,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 	}
 
 	req.Header.Add("Expect", "100-continue")
-	//req.Header.Add("Content-Length", string(len(body)))
+	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
 	req.Header.Add("columns", header)
 	req.SetBasicAuth(args.User, args.Password)
 
@@ -162,7 +163,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 			return nil
 		}
 
-		return fmt.Errorf("doris response tables[%s.%s], code:%v, body:%v", db, table, resp.StatusCode, b)
+		return fmt.Errorf("doris response tables[%s.%s], code:%v, body:%v", db, table, resp.StatusCode, string(b))
 	}
 
 	if resp.StatusCode == 200 {
