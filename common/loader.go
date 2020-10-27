@@ -11,6 +11,7 @@ package common
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -135,6 +136,8 @@ func submitDorisTask(db string, table string, header string, body string, args *
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+	b, _ := ioutil.ReadAll(resp.Body)
 
 	if resp.StatusCode == 307 {
 		req.URL, err = url.Parse(resp.Header.Get("Location")) // 重定向到BE节点
@@ -145,19 +148,21 @@ func submitDorisTask(db string, table string, header string, body string, args *
 		if err != nil {
 			return err
 		}
+		defer resp.Body.Close()
+		b, _ := ioutil.ReadAll(resp.Body)
 
 		if resp.StatusCode == 200 {
 			return nil
 		}
 
-		return fmt.Errorf("doris response tables[%s.%s]:%v", db, table, resp.StatusCode)
+		return fmt.Errorf("doris response tables[%s.%s], code:%v, body:%v", db, table, resp.StatusCode, b)
 	}
 
 	if resp.StatusCode == 200 {
 		return nil
 	}
 
-	return fmt.Errorf("doris response tables[%s.%s]:%v", db, table, resp.StatusCode)
+	return fmt.Errorf("doris response tables[%s.%s] code:%v, body:%v", db, table, resp.StatusCode, b)
 }
 
 func restoreDorisTable(log *xlog.Log, table string, conn *Connection, args *Args) int {
