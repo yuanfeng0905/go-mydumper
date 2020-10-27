@@ -357,7 +357,11 @@ func Dumper(log *xlog.Log, args *Args) {
 					pool.Put(conn)
 				}()
 				log.Info("dumping.table[%s.%s].datas.thread[%d]...", database, table, conn.ID)
-				dumpTable(log, conn, args, database, table)
+				if args.Mode == "doris" {
+					dumpDorisTable(log, conn, args, database, table)
+				} else {
+					dumpTable(log, conn, args, database, table)
+				}
 				log.Info("dumping.table[%s.%s].datas.thread[%d].done...", database, table, conn.ID)
 			}(conn, database, table)
 		}
