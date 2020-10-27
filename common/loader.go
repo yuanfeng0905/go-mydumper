@@ -128,7 +128,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 	}
 
 	req.Header.Add("Expect", "100-continue")
-	req.Header.Add("Content-Length", string(len(body)))
+	//req.Header.Add("Content-Length", string(len(body)))
 	req.Header.Add("columns", header)
 	req.SetBasicAuth(args.User, args.Password)
 
