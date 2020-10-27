@@ -129,6 +129,7 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 			WriteFile(file, query)
 
 			log.Info("dumping.table[%s.%s].rows[%v].bytes[%vMB].part[%v].thread[%d]", database, table, allRows, (allBytes / 1024 / 1024), fileNo, conn.ID)
+			rows = rows[:0]
 			inserts = inserts[:0] // clear
 			chunkbytes = 0
 			fileNo++
