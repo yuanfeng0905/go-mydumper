@@ -124,12 +124,7 @@ func submitDorisTask(db string, table string, header string, body string, args *
 	if err != nil {
 		return err
 	}
-	/**
-		'Expect': '100-continue',
-	            'Content-Length': str(post_len),
-	            'label': self.label,
-				'columns': ','.join(['`'+c+'`' for c in self._palo_schema.columns])
-				**/
+
 	req.Header.Add("Expect", "100-continue")
 	req.Header.Add("Content-Length", string(len(body)))
 	req.Header.Add("columns", header)
@@ -187,8 +182,8 @@ func restoreDorisTable(log *xlog.Log, table string, conn *Connection, args *Args
 	AssertNil(err)
 	query1 := common.BytesToString(data)
 	pos := strings.Index(query1, "\n") // 找到第一个换行符
-	header := query1[0:pos]
-	body := query1[pos+1:]
+	header := query1[0:pos]            // 第一行是表头
+	body := query1[pos+1:]             // 从第二行开始是正文
 	bytes = len(query1)
 
 	AssertNil(submitDorisTask(db, tbl, header, body, args))
