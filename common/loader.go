@@ -132,6 +132,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
 	req.Header.Add("columns", header)
 	req.Header.Add("Connection", "close") // 强制服务端关闭链接
+	req.Header.Add("strict_mode", "true") // 严格模式
 	req.SetBasicAuth(args.User, args.Password)
 
 	cli := &http.Client{
