@@ -119,7 +119,7 @@ func restoreTableSchema(log *xlog.Log, overwrite bool, tables []string, conn *Co
 	}
 }
 
-func submitDorisTask(db string, table string, header string, body string, args *Args) error {
+func submitDorisTask(log *xlog.Log, db string, table string, header string, body string, args *Args) error {
 	_url := fmt.Sprintf("http://%s/api/%s/%s/_stream_load", args.DorisHttpLoadAddress, db, table)
 
 	req, err := http.NewRequest("PUT", _url, strings.NewReader(body))
@@ -132,7 +132,7 @@ func submitDorisTask(db string, table string, header string, body string, args *
 	req.Header.Add("columns", header)
 	req.SetBasicAuth(args.User, args.Password)
 
-	cli := http.Client{
+	cli := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
@@ -149,6 +149,8 @@ func submitDorisTask(db string, table string, header string, body string, args *
 		if err != nil {
 			return err
 		}
+		log.Info("redirect to: %s, header:%v", req.URL, req.Header)
+		cli := &http.Client{}
 		resp, err := cli.Do(req) // retry
 		if err != nil {
 			return err
@@ -197,7 +199,7 @@ func restoreDorisTable(log *xlog.Log, table string, conn *Connection, args *Args
 	body := query1[pos+1:]             // 从第二行开始是正文
 	bytes = len(query1)
 
-	AssertNil(submitDorisTask(db, tbl, header, body, args))
+	AssertNil(submitDorisTask(log, db, tbl, header, body, args))
 
 	log.Info("restoring.tables[%s.%s].parts[%s].thread[%d].done...", db, tbl, part, conn.ID)
 	return bytes
