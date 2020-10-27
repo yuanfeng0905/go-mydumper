@@ -170,7 +170,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 		return nil
 	}
 
-	return fmt.Errorf("doris response tables[%s.%s] code:%v, body:%v", db, table, resp.StatusCode, b)
+	return fmt.Errorf("doris response tables[%s.%s] code:%v, body:%s", db, table, resp.StatusCode, string(b))
 }
 
 func restoreDorisTable(log *xlog.Log, table string, conn *Connection, args *Args) int {
