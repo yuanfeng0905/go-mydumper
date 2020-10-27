@@ -55,7 +55,7 @@ func main() {
 
 	args := &common.Args{
 		Mode:                 flagMode,
-		DorisHttpLoadAddress: fmt.Sprintf("%s:%d", flagHost, flagDorisHttpPort),
+		DorisHttpLoadAddress: fmt.Sprintf("%s:%d", "10.7.51.44", flagDorisHttpPort),
 		User:                 flagUser,
 		Password:             flagPasswd,
 		Address:              fmt.Sprintf("%s:%d", flagHost, flagPort),
