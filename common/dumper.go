@@ -147,10 +147,7 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 		file := fmt.Sprintf("%s/%s.%s.%05d.csv", args.Outdir, database, table, fileNo)
 		WriteFile(file, query)
 	}
-	err = cursor.Close()
-	if args.Mode != "doris" {
-		AssertNil(err)
-	}
+	cursor.Close()
 
 	log.Info("dumping.table[%s.%s].done.allrows[%v].allbytes[%vMB].thread[%d]...", database, table, allRows, (allBytes / 1024 / 1024), conn.ID)
 }

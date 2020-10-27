@@ -27,8 +27,11 @@ type Pool struct {
 
 // Connection tuple.
 type Connection struct {
-	ID     int
-	client driver.Conn
+	ID       int
+	client   driver.Conn
+	address  string
+	user     string
+	password string
 }
 
 // Execute used to executes the query.
@@ -54,7 +57,7 @@ func NewPool(log *xlog.Log, cap int, address string, user string, password strin
 		if err != nil {
 			return nil, err
 		}
-		conn := &Connection{ID: i, client: client}
+		conn := &Connection{ID: i, client: client, address: address, user: user, password: password}
 		if vars != "" {
 			conn.Execute(vars)
 		}
@@ -74,6 +77,19 @@ func (p *Pool) Get() *Connection {
 		return nil
 	}
 	conn := <-conns
+	// 检查链接是否有效
+	if err := conn.client.Ping(); err != nil {
+		if !conn.client.Closed() {
+			conn.client.Close()
+		}
+		// 生成新的client
+		client, err := driver.NewConn(conn.user, conn.password, conn.address, "", "utf8")
+		if err != nil {
+			panic(err)
+		}
+		conn.client = client // update
+	}
+
 	return conn
 }
 
