@@ -148,7 +148,9 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 		WriteFile(file, query)
 	}
 	err = cursor.Close()
-	AssertNil(err)
+	if args.Mode != "doris" {
+		AssertNil(err)
+	}
 
 	log.Info("dumping.table[%s.%s].done.allrows[%v].allbytes[%vMB].thread[%d]...", database, table, allRows, (allBytes / 1024 / 1024), conn.ID)
 }
