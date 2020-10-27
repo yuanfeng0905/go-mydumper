@@ -109,7 +109,12 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 				case v.IsSigned(), v.IsUnsigned(), v.IsFloat(), v.IsIntegral(), v.Type() == querypb.Type_DECIMAL:
 					values = append(values, str)
 				default:
-					values = append(values, fmt.Sprintf("\"%s\"", EscapeBytes(v.Raw())))
+					val := fmt.Sprintf("\"%s\"", EscapeBytes(v.Raw()))
+					if args.Mode == "doris" { // doris模式下，检查字符串中非法的\t\n
+						val = strings.ReplaceAll(val, "\t", "")
+						val = strings.ReplaceAll(val, "\n", "")
+					}
+					values = append(values, val)
 				}
 			}
 		}

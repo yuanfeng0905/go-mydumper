@@ -131,7 +131,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 	req.Header.Add("Expect", "100-continue")
 	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
 	req.Header.Add("columns", header)
-	req.Header.Add("Connection", "close")
+	req.Header.Add("Connection", "close") // 强制服务端关闭链接
 	req.SetBasicAuth(args.User, args.Password)
 
 	cli := &http.Client{
@@ -164,7 +164,6 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 		if resp.StatusCode == 200 {
 			return nil
 		}
-		time.Sleep(100 * time.Millisecond)
 		return fmt.Errorf("doris response tables[%s.%s], code:%v, body:%s", db, table, resp.StatusCode, string(b))
 	}
 
