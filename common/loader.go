@@ -163,7 +163,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 			return nil
 		}
 
-		return fmt.Errorf("doris response tables[%s.%s], code:%v, body:%v", db, table, resp.StatusCode, string(b))
+		return fmt.Errorf("doris response tables[%s.%s], code:%v, body:%s", db, table, resp.StatusCode, string(b))
 	}
 
 	if resp.StatusCode == 200 {
