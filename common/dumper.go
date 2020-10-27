@@ -58,26 +58,26 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 	var allBytes uint64
 	var allRows uint64
 	var where string
-	var selfields []string
+	var extFields []string
 
 	fields := make([]string, 0, 16)
 	{
 		cursor, err := conn.StreamFetch(fmt.Sprintf("SELECT * FROM `%s`.`%s` LIMIT 1", database, table))
 		AssertNil(err)
 
-		flds := cursor.Fields()
-		for _, fld := range flds {
-			log.Debug("dump -- %#v, %s, %s", args.Filters, table, fld.Name)
-			if _, ok := args.Filters[table][fld.Name]; ok {
+		fs := cursor.Fields()
+		for _, f := range fs {
+			log.Debug("dump -- %#v, %s, %s", args.Filters, table, f.Name)
+			if _, ok := args.Filters[table][f.Name]; ok {
 				continue
 			}
 
-			fields = append(fields, fmt.Sprintf("%s", fld.Name))
-			replacement, ok := args.Selects[table][fld.Name]
+			fields = append(fields, fmt.Sprintf("%s", f.Name))
+			replacement, ok := args.Selects[table][f.Name]
 			if ok {
-				selfields = append(selfields, fmt.Sprintf("%s AS `%s`", replacement, fld.Name))
+				extFields = append(extFields, fmt.Sprintf("%s AS `%s`", replacement, f.Name))
 			} else {
-				selfields = append(selfields, fmt.Sprintf("`%s`", fld.Name))
+				extFields = append(extFields, fmt.Sprintf("`%s`", f.Name))
 			}
 		}
 		err = cursor.Close()
@@ -88,7 +88,7 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 		where = fmt.Sprintf(" WHERE %v", v)
 	}
 
-	cursor, err := conn.StreamFetch(fmt.Sprintf("SELECT %s FROM `%s`.`%s` %s", strings.Join(selfields, ", "), database, table, where))
+	cursor, err := conn.StreamFetch(fmt.Sprintf("SELECT %s FROM `%s`.`%s` %s", strings.Join(extFields, ", "), database, table, where))
 	AssertNil(err)
 
 	fileNo := 1
@@ -156,26 +156,26 @@ func dumpTable(log *xlog.Log, conn *Connection, args *Args, database string, tab
 	var allBytes uint64
 	var allRows uint64
 	var where string
-	var selfields []string
+	var extFields []string
 
 	fields := make([]string, 0, 16)
 	{
 		cursor, err := conn.StreamFetch(fmt.Sprintf("SELECT * FROM `%s`.`%s` LIMIT 1", database, table))
 		AssertNil(err)
 
-		flds := cursor.Fields()
-		for _, fld := range flds {
-			log.Debug("dump -- %#v, %s, %s", args.Filters, table, fld.Name)
-			if _, ok := args.Filters[table][fld.Name]; ok {
+		fs := cursor.Fields()
+		for _, f := range fs {
+			log.Debug("dump -- %#v, %s, %s", args.Filters, table, f.Name)
+			if _, ok := args.Filters[table][f.Name]; ok {
 				continue
 			}
 
-			fields = append(fields, fmt.Sprintf("`%s`", fld.Name))
-			replacement, ok := args.Selects[table][fld.Name]
+			fields = append(fields, fmt.Sprintf("`%s`", f.Name))
+			replacement, ok := args.Selects[table][f.Name]
 			if ok {
-				selfields = append(selfields, fmt.Sprintf("%s AS `%s`", replacement, fld.Name))
+				extFields = append(extFields, fmt.Sprintf("%s AS `%s`", replacement, f.Name))
 			} else {
-				selfields = append(selfields, fmt.Sprintf("`%s`", fld.Name))
+				extFields = append(extFields, fmt.Sprintf("`%s`", f.Name))
 			}
 		}
 		err = cursor.Close()
@@ -186,7 +186,7 @@ func dumpTable(log *xlog.Log, conn *Connection, args *Args, database string, tab
 		where = fmt.Sprintf(" WHERE %v", v)
 	}
 
-	cursor, err := conn.StreamFetch(fmt.Sprintf("SELECT %s FROM `%s`.`%s` %s", strings.Join(selfields, ", "), database, table, where))
+	cursor, err := conn.StreamFetch(fmt.Sprintf("SELECT %s FROM `%s`.`%s` %s", strings.Join(extFields, ", "), database, table, where))
 	AssertNil(err)
 
 	fileNo := 1
