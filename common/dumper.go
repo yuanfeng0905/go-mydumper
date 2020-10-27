@@ -53,6 +53,102 @@ func dumpTableSchema(log *xlog.Log, conn *Connection, args *Args, database strin
 	log.Info("dumping.table[%s.%s].schema...", database, table)
 }
 
+// doris 表导出为csv格式
+func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string, table string) {
+	var allBytes uint64
+	var allRows uint64
+	var where string
+	var selfields []string
+
+	fields := make([]string, 0, 16)
+	{
+		cursor, err := conn.StreamFetch(fmt.Sprintf("SELECT * FROM `%s`.`%s` LIMIT 1", database, table))
+		AssertNil(err)
+
+		flds := cursor.Fields()
+		for _, fld := range flds {
+			log.Debug("dump -- %#v, %s, %s", args.Filters, table, fld.Name)
+			if _, ok := args.Filters[table][fld.Name]; ok {
+				continue
+			}
+
+			fields = append(fields, fmt.Sprintf("`%s`", fld.Name))
+			replacement, ok := args.Selects[table][fld.Name]
+			if ok {
+				selfields = append(selfields, fmt.Sprintf("%s AS `%s`", replacement, fld.Name))
+			} else {
+				selfields = append(selfields, fmt.Sprintf("`%s`", fld.Name))
+			}
+		}
+		err = cursor.Close()
+		AssertNil(err)
+	}
+
+	if v, ok := args.Wheres[table]; ok {
+		where = fmt.Sprintf(" WHERE %v", v)
+	}
+
+	cursor, err := conn.StreamFetch(fmt.Sprintf("SELECT %s FROM `%s`.`%s` %s", strings.Join(selfields, ", "), database, table, where))
+	AssertNil(err)
+
+	fileNo := 1
+	chunkbytes := 0
+	rows := make([]string, 0, 256)
+	inserts := make([]string, 0, 256)
+	for cursor.Next() {
+		row, err := cursor.RowValues()
+		AssertNil(err)
+
+		values := make([]string, 0, 16)
+		for _, v := range row {
+			if v.Raw() == nil {
+				values = append(values, "\\N") // doris null值特殊处理
+			} else {
+				str := v.String()
+				switch {
+				case v.IsSigned(), v.IsUnsigned(), v.IsFloat(), v.IsIntegral(), v.Type() == querypb.Type_DECIMAL:
+					values = append(values, str)
+				default:
+					values = append(values, fmt.Sprintf("\"%s\"", EscapeBytes(v.Raw())))
+				}
+			}
+		}
+		r := strings.Join(values, ",") // CSV 格式，逗号分隔
+		rows = append(rows, r)
+
+		allRows++
+		chunkbytes += len(r)
+		allBytes += uint64(len(r))
+		atomic.AddUint64(&args.Allbytes, uint64(len(r)))
+		atomic.AddUint64(&args.Allrows, 1)
+
+		if (chunkbytes / 1024 / 1024) >= args.ChunksizeInMB {
+			inserts = append(inserts, strings.Join(fields, ","), strings.Join(rows, "\n")) // 文件首行是csv头
+			query := strings.Join(inserts, "\n")                                           // 换行
+			file := fmt.Sprintf("%s/%s.%s.%05d.csv", args.Outdir, database, table, fileNo)
+			WriteFile(file, query)
+
+			log.Info("dumping.table[%s.%s].rows[%v].bytes[%vMB].part[%v].thread[%d]", database, table, allRows, (allBytes / 1024 / 1024), fileNo, conn.ID)
+			inserts = inserts[:0] // clear
+			chunkbytes = 0
+			fileNo++
+		}
+	}
+	if chunkbytes > 0 {
+		if len(rows) > 0 {
+			inserts = append(inserts, strings.Join(fields, ","), strings.Join(rows, "\n"))
+		}
+
+		query := strings.Join(inserts, "\n")
+		file := fmt.Sprintf("%s/%s.%s.%05d.csv", args.Outdir, database, table, fileNo)
+		WriteFile(file, query)
+	}
+	err = cursor.Close()
+	AssertNil(err)
+
+	log.Info("dumping.table[%s.%s].done.allrows[%v].allbytes[%vMB].thread[%d]...", database, table, allRows, (allBytes / 1024 / 1024), conn.ID)
+}
+
 func dumpTable(log *xlog.Log, conn *Connection, args *Args, database string, table string) {
 	var allBytes uint64
 	var allRows uint64

@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	flagOverwriteTables                     bool
-	flagPort, flagThreads                   int
-	flagUser, flagPasswd, flagHost, flagDir string
+	flagOverwriteTables                               bool
+	flagPort, flagThreads, flagDorisHttpPort          int
+	flagUser, flagPasswd, flagHost, flagDir, flagMode string
 
 	log = xlog.NewStdLog(xlog.Level(xlog.INFO))
 )
@@ -35,6 +35,8 @@ func init() {
 	flag.StringVar(&flagDir, "d", "", "Directory of the dump to import")
 	flag.IntVar(&flagThreads, "t", 16, "Number of threads to use")
 	flag.BoolVar(&flagOverwriteTables, "o", false, "Drop tables if they already exist")
+	flag.StringVar(&flagMode, "m", "", "doris mode for support Doris MPP")
+	flag.IntVar(&flagDorisHttpPort, "dp", 8030, "doris mode for HTTP Load Port")
 }
 
 func usage() {
@@ -52,6 +54,8 @@ func main() {
 	}
 
 	args := &common.Args{
+		Mode:            flagMode,
+		DorisHttpPort:   flagDorisHttpPort,
 		User:            flagUser,
 		Password:        flagPasswd,
 		Address:         fmt.Sprintf("%s:%d", flagHost, flagPort),
@@ -60,5 +64,6 @@ func main() {
 		IntervalMs:      10 * 1000,
 		OverwriteTables: flagOverwriteTables,
 	}
+
 	common.Loader(log, args)
 }

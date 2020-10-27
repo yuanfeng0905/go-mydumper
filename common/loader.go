@@ -12,6 +12,8 @@ package common
 import (
 	"fmt"
 	"math/rand"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -115,6 +117,86 @@ func restoreTableSchema(log *xlog.Log, overwrite bool, tables []string, conn *Co
 	}
 }
 
+func submitDorisTask(db string, table string, header string, body string, args *Args) error {
+	_url := fmt.Sprintf("http://%s:%d/api/%s/%s/_stream_load", args.Address, args.DorisHttpPort, db, table)
+
+	req, err := http.NewRequest("POST", _url, strings.NewReader(body))
+	if err != nil {
+		return err
+	}
+	/**
+		'Expect': '100-continue',
+	            'Content-Length': str(post_len),
+	            'label': self.label,
+				'columns': ','.join(['`'+c+'`' for c in self._palo_schema.columns])
+				**/
+	req.Header.Add("Expect", "100-continue")
+	req.Header.Add("Content-Length", string(len(body)))
+	req.Header.Add("columns", header)
+
+	cli := http.DefaultClient
+	resp, err := cli.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == 307 {
+		req.URL, err = url.Parse(resp.Header.Get("Location")) // 重定向到BE节点
+		if err != nil {
+			return err
+		}
+		resp, err := cli.Do(req) // retry
+		if err != nil {
+			return err
+		}
+
+		if resp.StatusCode == 200 {
+			return nil
+		}
+
+		return fmt.Errorf("doris response tables[%s.%s]:%v", db, table, resp.StatusCode)
+	}
+
+	if resp.StatusCode == 200 {
+		return nil
+	}
+
+	return fmt.Errorf("doris response tables[%s.%s]:%v", db, table, resp.StatusCode)
+}
+
+func restoreDorisTable(log *xlog.Log, table string, conn *Connection, args *Args) int {
+	bytes := 0
+	part := "0"
+	base := filepath.Base(table)
+	name := strings.TrimSuffix(base, tableSuffix)
+	splits := strings.Split(name, ".")
+	db := splits[0]
+	tbl := splits[1]
+	if len(splits) > 2 {
+		part = splits[2]
+	}
+
+	log.Info("restoring.tables[%s.%s].parts[%s].thread[%d]", db, tbl, part, conn.ID)
+	err := conn.Execute(fmt.Sprintf("USE `%s`", db))
+	AssertNil(err)
+
+	//err = conn.Execute("SET FOREIGN_KEY_CHECKS=0")
+	//AssertNil(err)
+
+	data, err := ReadFile(table)
+	AssertNil(err)
+	query1 := common.BytesToString(data)
+	pos := strings.Index(query1, "\n") // 找到第一个换行符
+	header := query1[0:pos]
+	body := query1[pos+1:]
+	bytes = len(query1)
+
+	AssertNil(submitDorisTask(db, tbl, header, body, args))
+
+	log.Info("restoring.tables[%s.%s].parts[%s].thread[%d].done...", db, tbl, part, conn.ID)
+	return bytes
+}
+
 func restoreTable(log *xlog.Log, table string, conn *Connection) int {
 	bytes := 0
 	part := "0"
@@ -184,7 +266,12 @@ func Loader(log *xlog.Log, args *Args) {
 				wg.Done()
 				pool.Put(conn)
 			}()
-			r := restoreTable(log, table, conn)
+			var r int
+			if args.Mode == "doris" {
+				r = restoreDorisTable(log, table, conn, args)
+			} else {
+				r = restoreTable(log, table, conn)
+			}
 			atomic.AddUint64(&bytes, uint64(r))
 		}(conn, table)
 	}
