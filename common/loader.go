@@ -11,11 +11,9 @@ package common
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -84,6 +82,9 @@ func restoreDatabaseSchema(log *xlog.Log, dbs []string, conn *Connection) {
 }
 
 func restoreTableSchema(log *xlog.Log, overwrite bool, tables []string, conn *Connection) {
+	if !overwrite {
+		return
+	}
 	for _, table := range tables {
 		// use
 		base := filepath.Base(table)
@@ -107,12 +108,11 @@ func restoreTableSchema(log *xlog.Log, overwrite bool, tables []string, conn *Co
 		querys := strings.Split(query1, ";\n")
 		for _, query := range querys {
 			if !strings.HasPrefix(query, "/*") && query != "" {
-				if overwrite {
-					log.Info("drop(overwrite.is.true).table[%s.%s]", db, tbl)
-					dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s", name)
-					err = conn.Execute(dropQuery)
-					AssertNil(err)
-				}
+				log.Info("drop(overwrite.is.true).table[%s.%s]", db, tbl)
+				dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s", name)
+				err = conn.Execute(dropQuery)
+				AssertNil(err)
+
 				err = conn.Execute(query)
 				AssertNil(err)
 			}
@@ -127,7 +127,7 @@ func _newDorisLoadRequest(url, header, body, username, password string) (resp *h
 		return
 	}
 
-	req.Header.Add("Expect", "100-continue")
+	//req.Header.Add("Expect", "100-continue")
 	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
 	req.Header.Add("columns", header)
 	req.Header.Add("Connection", "close") // 强制服务端关闭链接
@@ -156,8 +156,8 @@ func _newDorisLoadRequest(url, header, body, username, password string) (resp *h
 	return
 }
 
-func submitDorisTask(log *xlog.Log, db string, table string, header string, body string, args *Args) (err error) {
-	_url := fmt.Sprintf("http://%s/api/%s/%s/_stream_load", args.DorisHttpLoadAddress, db, table)
+func submitDorisTask(log *xlog.Log, db string, table string, addr string, header string, body string, args *Args) (err error) {
+	_url := fmt.Sprintf("http://%s/api/%s/%s/_stream_load", addr, db, table)
 
 	resp, err := _newDorisLoadRequest(_url, header, body, args.User, args.Password)
 	if err != nil {
@@ -165,24 +165,24 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 307 {
-		_url, err := url.Parse(resp.Header.Get("Location")) // 重定向到BE节点
-		if err != nil {
-			return err
-		}
-		resp, err := _newDorisLoadRequest(_url.String(), header, body, args.User, args.Password)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-		b, _ := ioutil.ReadAll(resp.Body)
-		log.Info("doris response tables[%s.%s], code:%v, body:%s", db, table, resp.StatusCode, string(b))
+	// if resp.StatusCode == 307 {
+	// 	_url, err := url.Parse(resp.Header.Get("Location")) // 重定向到BE节点
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	resp, err := _newDorisLoadRequest(_url.String(), header, body, args.User, args.Password)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	defer resp.Body.Close()
+	// 	b, _ := ioutil.ReadAll(resp.Body)
+	// 	log.Info("doris response tables[%s.%s], code:%v, body:%s", db, table, resp.StatusCode, string(b))
 
-		if resp.StatusCode == 200 {
-			return nil
-		}
-		return fmt.Errorf("doris response tables[%s.%s], code:%v, body:%s", db, table, resp.StatusCode, string(b))
-	}
+	// 	if resp.StatusCode == 200 {
+	// 		return nil
+	// 	}
+	// 	return fmt.Errorf("doris response tables[%s.%s], code:%v, body:%s", db, table, resp.StatusCode, string(b))
+	// }
 
 	if resp.StatusCode == 200 {
 		return
@@ -191,7 +191,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 	return fmt.Errorf("request url:%s, doris response tables[%s.%s] code:%v", _url, db, table, resp.StatusCode)
 }
 
-func restoreDorisTable(log *xlog.Log, table string, conn *Connection, args *Args) int {
+func restoreDorisTable(log *xlog.Log, table string, addr string, conn *Connection, args *Args) int {
 	bytes := 0
 	part := "0"
 	base := filepath.Base(table)
@@ -204,8 +204,6 @@ func restoreDorisTable(log *xlog.Log, table string, conn *Connection, args *Args
 	}
 
 	log.Info("restoring.tables[%s.%s].parts[%s].thread[%d]", db, tbl, part, conn.ID)
-	err := conn.Execute(fmt.Sprintf("USE `%s`", db))
-	AssertNil(err)
 
 	//err = conn.Execute("SET FOREIGN_KEY_CHECKS=0")
 	//AssertNil(err)
@@ -219,9 +217,10 @@ func restoreDorisTable(log *xlog.Log, table string, conn *Connection, args *Args
 	bytes = len(query1)
 
 	for {
-		if err := submitDorisTask(log, db, tbl, header, body, args); err != nil {
+		if err := submitDorisTask(log, db, tbl, addr, header, body, args); err != nil {
 			log.Error("submit doris load task error: %v, retry...", err)
 			time.Sleep(3 * time.Second)
+			continue
 		}
 		break
 	}
@@ -291,22 +290,27 @@ func Loader(log *xlog.Log, args *Args) {
 	var wg sync.WaitGroup
 	var bytes uint64
 	t := time.Now()
+	idx := 0
 	for _, table := range files.tables {
 		conn := pool.Get()
 		wg.Add(1)
-		go func(conn *Connection, table string) {
+
+		dorisAddr := args.DorisHttpLoadAddress[idx%len(args.DorisHttpLoadAddress)]
+		idx++
+
+		go func(conn *Connection, addr string, table string) {
 			defer func() {
 				wg.Done()
 				pool.Put(conn)
 			}()
 			var r int
 			if args.Mode == "doris" {
-				r = restoreDorisTable(log, table, conn, args)
+				r = restoreDorisTable(log, table, addr, conn, args)
 			} else {
 				r = restoreTable(log, table, conn)
 			}
 			atomic.AddUint64(&bytes, uint64(r))
-		}(conn, table)
+		}(conn, dorisAddr, table)
 	}
 
 	tick := time.NewTicker(time.Millisecond * time.Duration(args.IntervalMs))

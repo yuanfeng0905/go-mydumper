@@ -13,6 +13,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/yuanfeng0905/go-mydumper/common"
 
@@ -20,9 +21,9 @@ import (
 )
 
 var (
-	flagOverwriteTables                               bool
-	flagPort, flagThreads, flagDorisHttpPort          int
-	flagUser, flagPasswd, flagHost, flagDir, flagMode string
+	flagOverwriteTables                                                     bool
+	flagPort, flagThreads                                                   int
+	flagUser, flagPasswd, flagHost, flagDir, flagMode, flagDorisLoadAddress string
 
 	log = xlog.NewStdLog(xlog.Level(xlog.INFO))
 )
@@ -36,7 +37,7 @@ func init() {
 	flag.IntVar(&flagThreads, "t", 16, "Number of threads to use")
 	flag.BoolVar(&flagOverwriteTables, "o", false, "Drop tables if they already exist")
 	flag.StringVar(&flagMode, "m", "", "doris mode for support Doris MPP")
-	flag.IntVar(&flagDorisHttpPort, "dp", 8030, "doris mode for HTTP Load Port")
+	flag.StringVar(&flagDorisLoadAddress, "dp", "", "doris mode for HTTP Load address")
 }
 
 func usage() {
@@ -55,7 +56,7 @@ func main() {
 
 	args := &common.Args{
 		Mode:                 flagMode,
-		DorisHttpLoadAddress: fmt.Sprintf("%s:%d", "10.7.51.44", 8040),
+		DorisHttpLoadAddress: strings.Split(flagDorisLoadAddress, ","),
 		User:                 flagUser,
 		Password:             flagPasswd,
 		Address:              fmt.Sprintf("%s:%d", flagHost, flagPort),
