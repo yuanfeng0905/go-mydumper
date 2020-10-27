@@ -79,6 +79,7 @@ func (p *Pool) Get() *Connection {
 	conn := <-conns
 	// 检查链接是否有效
 	if err := conn.client.Ping(); err != nil {
+		p.log.Warning("current conn[%d].client is invalid, renew...", conn.ID)
 		if !conn.client.Closed() {
 			conn.client.Close()
 		}
