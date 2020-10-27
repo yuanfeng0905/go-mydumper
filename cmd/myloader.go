@@ -54,15 +54,15 @@ func main() {
 	}
 
 	args := &common.Args{
-		Mode:            flagMode,
-		DorisHttpPort:   flagDorisHttpPort,
-		User:            flagUser,
-		Password:        flagPasswd,
-		Address:         fmt.Sprintf("%s:%d", flagHost, flagPort),
-		Outdir:          flagDir,
-		Threads:         flagThreads,
-		IntervalMs:      10 * 1000,
-		OverwriteTables: flagOverwriteTables,
+		Mode:                 flagMode,
+		DorisHttpLoadAddress: fmt.Sprintf("%s:%d", flagHost, flagDorisHttpPort),
+		User:                 flagUser,
+		Password:             flagPasswd,
+		Address:              fmt.Sprintf("%s:%d", flagHost, flagPort),
+		Outdir:               flagDir,
+		Threads:              flagThreads,
+		IntervalMs:           10 * 1000,
+		OverwriteTables:      flagOverwriteTables,
 	}
 
 	common.Loader(log, args)

@@ -20,7 +20,7 @@ import (
 // Args tuple.
 type Args struct {
 	Mode                 string
-	DorisHttpPort        int
+	DorisHttpLoadAddress string
 	User                 string
 	Password             string
 	Address              string

@@ -119,7 +119,7 @@ func restoreTableSchema(log *xlog.Log, overwrite bool, tables []string, conn *Co
 }
 
 func submitDorisTask(db string, table string, header string, body string, args *Args) error {
-	_url := fmt.Sprintf("http://%s:%d/api/%s/%s/_stream_load", args.Address, args.DorisHttpPort, db, table)
+	_url := fmt.Sprintf("http://%s/api/%s/%s/_stream_load", args.DorisHttpLoadAddress, db, table)
 
 	req, err := http.NewRequest("POST", _url, strings.NewReader(body))
 	if err != nil {
