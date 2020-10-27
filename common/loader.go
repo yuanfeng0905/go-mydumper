@@ -163,7 +163,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 		if resp.StatusCode == 200 {
 			return nil
 		}
-
+		time.Sleep(100 * time.Millisecond)
 		return fmt.Errorf("doris response tables[%s.%s], code:%v, body:%s", db, table, resp.StatusCode, string(b))
 	}
 
