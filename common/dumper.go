@@ -72,7 +72,7 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 				continue
 			}
 
-			fields = append(fields, fmt.Sprintf("`%s`", fld.Name))
+			fields = append(fields, fmt.Sprintf("%s", fld.Name))
 			replacement, ok := args.Selects[table][fld.Name]
 			if ok {
 				selfields = append(selfields, fmt.Sprintf("%s AS `%s`", replacement, fld.Name))
@@ -110,10 +110,6 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 					values = append(values, str)
 				default:
 					val := fmt.Sprintf("\"%s\"", EscapeBytes(v.Raw()))
-					if args.Mode == "doris" { // doris模式下，检查字符串中非法的\t\n
-						val = strings.ReplaceAll(val, "\t", "")
-						val = strings.ReplaceAll(val, "\n", "")
-					}
 					values = append(values, val)
 				}
 			}
