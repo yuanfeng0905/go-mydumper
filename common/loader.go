@@ -131,6 +131,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, header string, body
 	req.Header.Add("Expect", "100-continue")
 	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
 	req.Header.Add("columns", header)
+	req.Header.Add("Connection", "close")
 	req.SetBasicAuth(args.User, args.Password)
 
 	cli := &http.Client{
