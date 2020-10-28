@@ -10,6 +10,7 @@
 package common
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/xelabs/go-mysqlstack/driver"
@@ -60,8 +61,11 @@ func NewPool(log *xlog.Log, cap int, address string, user string, password strin
 		}
 		conn := &Connection{ID: i, client: client, address: address, user: user, password: password, vars: vars}
 		if vars != "" {
-			if err := conn.Execute(vars); err != nil {
-				return nil, err
+			varsSp := strings.Split(vars, ";")
+			for _, v := range varsSP {
+				if err := conn.Execute(v); err != nil {
+					return nil, err
+				}
 			}
 		}
 		conns <- conn
@@ -93,8 +97,11 @@ func (p *Pool) Get() *Connection {
 		}
 		conn.client = client // update
 		if conn.vars != "" {
-			if err := conn.Execute(conn.vars); err != nil {
-				panic(err)
+			varsSp := strings.Split(conn.vars, ";")
+			for _, v := range varsSp {
+				if err := conn.Execute(v); err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
