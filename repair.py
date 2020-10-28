@@ -39,12 +39,12 @@ def run_dumper(db, table):
 
 def run_loader():
     p = Popen(
-        ['./myloader'
+        ['./myloader',
         '-dp', '10.7.51.44:8040,10.7.66.46:8040,10.7.84.112:8040,10.7.187.18:8040',
         '-P', 9030,
         '-d', './repair_sql',
         '-h', '10.7.85.221',
-        '-m', 'doris'
+        '-m', 'doris',
         '-u', 'root',
         '-p', '123456',
         '-t', 8
