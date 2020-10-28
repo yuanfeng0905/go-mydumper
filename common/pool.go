@@ -32,6 +32,7 @@ type Connection struct {
 	address  string
 	user     string
 	password string
+	vars     string
 }
 
 // Execute used to executes the query.
@@ -57,7 +58,7 @@ func NewPool(log *xlog.Log, cap int, address string, user string, password strin
 		if err != nil {
 			return nil, err
 		}
-		conn := &Connection{ID: i, client: client, address: address, user: user, password: password}
+		conn := &Connection{ID: i, client: client, address: address, user: user, password: password, vars: vars}
 		if vars != "" {
 			conn.Execute(vars)
 		}
@@ -89,6 +90,9 @@ func (p *Pool) Get() *Connection {
 			panic(err)
 		}
 		conn.client = client // update
+		if conn.vars != "" {
+			conn.Execute(vars)
+		}
 	}
 
 	return conn
