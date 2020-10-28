@@ -121,8 +121,8 @@ func restoreTableSchema(log *xlog.Log, overwrite bool, tables []string, conn *Co
 	}
 }
 
-func _newDorisLoadRequest(url, header, body, username, password string) (resp *http.Response, err error) {
-	req, err := http.NewRequest("PUT", url, strings.NewReader(body))
+func _newDorisLoadRequest(url, header, body, username, password string) (req *http.Request, err error) {
+	req, err = http.NewRequest("PUT", url, strings.NewReader(body))
 	if err != nil {
 		return
 	}
@@ -130,36 +130,18 @@ func _newDorisLoadRequest(url, header, body, username, password string) (resp *h
 	//req.Header.Add("Expect", "100-continue")
 	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
 	req.Header.Add("columns", header)
-	req.Header.Add("Connection", "close") // 强制服务端关闭链接
+	//req.Header.Add("Connection", "close") // 强制服务端关闭链接
 	req.SetBasicAuth(username, password)
-
-	cli := &http.Client{
-		Transport: &http.Transport{
-			Dial: func(netw, addr string) (net.Conn, error) {
-				c, err := net.DialTimeout(netw, addr, time.Second*10) //设置建立连接超时
-				if err != nil {
-					return nil, err
-
-				}
-				c.SetDeadline(time.Now().Add(300 * time.Second)) // doris 默认超时
-				return c, nil
-			},
-		},
-		// 禁止自动跳转
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
-	resp, err = cli.Do(req)
 
 	return
 }
 
-func submitDorisTask(log *xlog.Log, db string, table string, addr string, header string, body string, args *Args) (err error) {
-	_url := fmt.Sprintf("http://%s/api/%s/%s/_stream_load", addr, db, table)
-
-	resp, err := _newDorisLoadRequest(_url, header, body, args.User, args.Password)
+func submitDorisTask(log *xlog.Log, url string, client *http.Client, header string, body string, args *Args) (err error) {
+	req, err := _newDorisLoadRequest(url, header, body, args.User, args.Password)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -169,7 +151,7 @@ func submitDorisTask(log *xlog.Log, db string, table string, addr string, header
 		return
 	}
 
-	return fmt.Errorf("request url:%s, doris response tables[%s.%s] code:%v", _url, db, table, resp.StatusCode)
+	return fmt.Errorf("request url:%s, doris response code:%v", url, resp.StatusCode)
 }
 
 func restoreDorisTable(log *xlog.Log, table string, addr string, conn *Connection, args *Args) int {
@@ -197,8 +179,28 @@ func restoreDorisTable(log *xlog.Log, table string, addr string, conn *Connectio
 	body := query1[pos+1:]             // 从第二行开始是正文
 	bytes = len(query1)
 
+	cli := &http.Client{
+		Transport: &http.Transport{
+			Dial: func(netw, addr string) (net.Conn, error) {
+				c, err := net.DialTimeout(netw, addr, time.Second*60) //设置建立连接超时
+				if err != nil {
+					return nil, err
+
+				}
+				c.SetDeadline(time.Now().Add(600 * time.Second)) // doris 默认超时
+				return c, nil
+			},
+		},
+		// 禁止自动跳转
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+		Timeout: 600 * time.Second,
+	}
+	_url := fmt.Sprintf("http://%s/api/%s/%s/_stream_load", addr, db, table)
+
 	for {
-		if err := submitDorisTask(log, db, tbl, addr, header, body, args); err != nil {
+		if err := submitDorisTask(log, _url, cli, header, body, args); err != nil {
 			log.Error("submit doris load task error[%s.%s].parts[%s].thread[%d]: %v, retry...", db, tbl, part, conn.ID, err)
 			time.Sleep(3 * time.Second)
 			continue
