@@ -61,8 +61,8 @@ func NewPool(log *xlog.Log, cap int, address string, user string, password strin
 		}
 		conn := &Connection{ID: i, client: client, address: address, user: user, password: password, vars: vars}
 		if vars != "" {
-			varsSp := strings.Split(vars, ";")
-			for _, v := range varsSP {
+			varSp := strings.Split(vars, ";")
+			for _, v := range varSp {
 				if err := conn.Execute(v); err != nil {
 					return nil, err
 				}
@@ -97,8 +97,8 @@ func (p *Pool) Get() *Connection {
 		}
 		conn.client = client // update
 		if conn.vars != "" {
-			varsSp := strings.Split(conn.vars, ";")
-			for _, v := range varsSp {
+			varSp := strings.Split(conn.vars, ";")
+			for _, v := range varSp {
 				if err := conn.Execute(v); err != nil {
 					panic(err)
 				}
