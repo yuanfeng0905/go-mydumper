@@ -10,7 +10,9 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -127,10 +129,8 @@ func _newDorisLoadRequest(url, header, body, username, password string) (req *ht
 		return
 	}
 
-	//req.Header.Add("Expect", "100-continue")
 	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
 	req.Header.Add("columns", header)
-	//req.Header.Add("Connection", "close") // 强制服务端关闭链接
 	req.SetBasicAuth(username, password)
 
 	return
@@ -148,6 +148,25 @@ func submitDorisTask(log *xlog.Log, url string, client *http.Client, header stri
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 200 {
+		var dorisResp struct {
+			Status           string `json:"Status"`
+			Message          string `json:"Message"`
+			NumberTotalRows  int    `json:"NumberTotalRows"`
+			NumberLoadedRows int    `json:"NumberLoadedRows"`
+			ErrorURL         string `json:"ErrorURL"`
+		}
+		buf, _ := ioutil.ReadAll(resp.Body)
+		if err := json.Unmarshal(buf, &dorisResp); err != nil {
+			return err
+		}
+		// 导入失败
+		if dorisResp.Status == "Fail" {
+			return fmt.Errorf("request url:%s error: %s, error url:%s", url, dorisResp.Message, dorisResp.ErrorURL)
+		}
+		if dorisResp.NumberTotalRows != dorisResp.NumberLoadedRows {
+			// 过滤了行，写警告日志，人工排查
+			log.Warning("request url:%s, total rows:%d, loaded rows:%d, error url:%s", url, dorisResp.NumberTotalRows, dorisResp.NumberLoadedRows, dorisResp.ErrorURL)
+		}
 		return
 	}
 
