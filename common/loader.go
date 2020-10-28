@@ -295,6 +295,18 @@ func Loader(log *xlog.Log, args *Args) {
 	var bytes uint64
 	t := time.Now()
 	idx := 0
+
+	tick := time.NewTicker(time.Millisecond * time.Duration(args.IntervalMs))
+	defer tick.Stop()
+	go func() {
+		for range tick.C {
+			diff := time.Since(t).Seconds()
+			bytes := float64(atomic.LoadUint64(&bytes) / 1024 / 1024)
+			rates := bytes / diff
+			log.Info("restoring.allbytes[%vMB].time[%.2fsec].rates[%.2fMB/sec]...", bytes, diff, rates)
+		}
+	}()
+
 	for _, table := range files.tables {
 		conn := pool.Get()
 		wg.Add(1)
@@ -316,17 +328,6 @@ func Loader(log *xlog.Log, args *Args) {
 			atomic.AddUint64(&bytes, uint64(r))
 		}(conn, dorisAddr, table)
 	}
-
-	tick := time.NewTicker(time.Millisecond * time.Duration(args.IntervalMs))
-	defer tick.Stop()
-	go func() {
-		for range tick.C {
-			diff := time.Since(t).Seconds()
-			bytes := float64(atomic.LoadUint64(&bytes) / 1024 / 1024)
-			rates := bytes / diff
-			log.Info("restoring.allbytes[%vMB].time[%.2fsec].rates[%.2fMB/sec]...", bytes, diff, rates)
-		}
-	}()
 
 	wg.Wait()
 	elapsed := time.Since(t).Seconds()

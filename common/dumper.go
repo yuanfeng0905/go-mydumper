@@ -326,6 +326,7 @@ func Dumper(log *xlog.Log, args *Args) {
 	conn := pool.Get()
 	var databases []string
 	t := time.Now()
+
 	if args.DatabaseRegexp != "" {
 		r := regexp.MustCompile(args.DatabaseRegexp)
 		databases = filterDatabases(log, conn, r, args.DatabaseInvertRegexp)
@@ -355,6 +356,18 @@ func Dumper(log *xlog.Log, args *Args) {
 		}
 	}
 	pool.Put(conn)
+
+	tick := time.NewTicker(time.Millisecond * time.Duration(args.IntervalMs))
+	defer tick.Stop()
+	go func() {
+		for range tick.C {
+			diff := time.Since(t).Seconds()
+			allbytesMB := float64(atomic.LoadUint64(&args.Allbytes) / 1024 / 1024)
+			allrows := atomic.LoadUint64(&args.Allrows)
+			rates := allbytesMB / diff
+			log.Info("dumping.allbytes[%vMB].allrows[%v].time[%.2fsec].rates[%.2fMB/sec]...", allbytesMB, allrows, diff, rates)
+		}
+	}()
 
 	for i, database := range databases {
 		for _, table := range tables[i] {
@@ -386,18 +399,6 @@ func Dumper(log *xlog.Log, args *Args) {
 			}(conn, database, table)
 		}
 	}
-
-	tick := time.NewTicker(time.Millisecond * time.Duration(args.IntervalMs))
-	defer tick.Stop()
-	go func() {
-		for range tick.C {
-			diff := time.Since(t).Seconds()
-			allbytesMB := float64(atomic.LoadUint64(&args.Allbytes) / 1024 / 1024)
-			allrows := atomic.LoadUint64(&args.Allrows)
-			rates := allbytesMB / diff
-			log.Info("dumping.allbytes[%vMB].allrows[%v].time[%.2fsec].rates[%.2fMB/sec]...", allbytesMB, allrows, diff, rates)
-		}
-	}()
 
 	wg.Wait()
 	elapsed := time.Since(t).Seconds()
