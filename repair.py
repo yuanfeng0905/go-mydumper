@@ -53,16 +53,17 @@ def do():
     # 检查所有含有decimal类型的表
 
     # for loader
-    cmd_lines = []
+    dbs = set([])
+    tbs = set([])
     cur.execute("select TABLE_SCHEMA,table_name from information_schema.columns where column_type like 'decimal%' group by table_schema,table_name;")
     for db, table in cur.fetchall():
         if table == 'product_channel_report':
             continue
-        cmd_lines.append('./mydumper -m doris -h 10.8.185.190 -t 16 -P 9030 -u root -p \!@#\$411589559 -d ./repair_sql -db %s -table %s -vars "SET query_timeout=3600;SET exec_mem_limit=10737418240"' % (db, table))
-    
-    output = '\n'.join(cmd_lines)
+        dbs.add(db)
+        tbs.add(table)
+
     with open('repair_bash.sh', 'w') as f:
-        f.write(output)
+        f.write('./mydumper -m doris -h 10.8.185.190 -t 16 -P 9030 -u root -p \!@#\$411589559 -d ./repair_sql -db %s -table %s -vars "SET query_timeout=3600;SET exec_mem_limit=10737418240"' % (','.join(list(dbs)), ','.join(list(tbs))))
 
     cur.close()
     conn.close()
