@@ -1,6 +1,9 @@
 [mysql]
-# 兼容doris
-mode = doris
+# doris 模式兼容, 默认 mysql 模式
+# mode = doris
+# 并发线程数，默认16
+# threads = 16
+
 # The host to connect to
 host = 127.0.0.1
 # TCP/IP port to conect to

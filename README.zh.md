@@ -3,9 +3,14 @@
 [![Github Actions Status](https://github.com/xelabs/go-mydumper/workflows/mydumper%20Coverage/badge.svg?event=push)](https://github.com/xelabs/go-mydumper/actions?query=workflow%3A%22mydumper+Coverage%22+event%3Apush)
 [![Go Report Card](https://goreportcard.com/badge/github.com/xelabs/go-mydumper)](https://goreportcard.com/report/github.com/xelabs/go-mydumper) [![codecov.io](https://codecov.io/gh/xelabs/go-mydumper/graphs/badge.svg)](https://codecov.io/gh/xelabs/go-mydumper/branch/master)
 
-# go-mydumper [中文](./README.zh.md)
+# go-mydumper
 
-***go-mydumper*** is a multi-threaded MySQL backup and restore tool, and it is compatible with [maxbube/mydumper](https://github.com/maxbube/mydumper) in the layout.
+***go-mydumper*** 是一个使用 Golang 开发的 MySQL 数据库备份/恢复工具，支持多线程。 本项目与 [maxbube/mydumper](https://github.com/maxbube/mydumper) 保持兼容。
+
+本 fork 兼容 Doris 的数据备份/恢复，并增强了稳定性。
+
+> * doris 模式只支持表引擎为 `doris` 的表，不支持外部表。
+> * doris 模式不支持含有 `HLL` 类型字段的表。
 
 
 ## Build
@@ -92,6 +97,10 @@ Usage: ./bin/myloader -h [HOST] -P [PORT] -u [USER] -p [PASSWORD] -d  [DIR]
     	Number of threads to use (default 16)
   -u string
     	Username with privileges to run the loader
+  -m string
+        doris mode for support Doris MPP (default "mysql")
+  -dp string
+        doris mode for HTTP Load address
 
 Examples:
 $./bin/myloader -h 192.168.0.2 -P 3306 -u mock -p mock -d sbtest.sql
