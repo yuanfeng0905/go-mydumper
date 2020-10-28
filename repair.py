@@ -66,7 +66,7 @@ def do():
     # 检查所有含有decimal类型的表
 
     # for loader
-    cur.execute("select TABLE_SCHEMA,table_name from columns where column_type like 'decimal%' group by table_schema,table_name;")
+    cur.execute("select TABLE_SCHEMA,table_name from information_schema.columns where column_type like 'decimal%' group by table_schema,table_name;")
     for db, table in cur.fetchall():
         run_dumper(db, table)
 
