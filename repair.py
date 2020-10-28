@@ -33,10 +33,9 @@ def run_dumper(db, table):
         stdin=PIPE,
         stdout=PIPE,
         stderr=PIPE)
-    p.wait()
-    out = p.stdout.read()
     print(">" * 100)
-    print(out)
+    for l in p.stdout.readlines():
+        print(l)
 
 def run_loader():
     p = Popen(
