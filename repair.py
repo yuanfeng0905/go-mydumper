@@ -22,11 +22,12 @@ def Conn(host=None, port=None, user=None, passwd=None):
 def run_dumper(db, table):
     p = Popen(
         ['./mydumper', 
+        '-m', 'doris', # doris 模式
         '-h', '10.8.185.190', 
         '-P', 9030, 
         '-u', 'root',
-        '-p', '!@#$411589559',
-        '-d', './sql_'+db,
+        '-p', '\!@#\$411589559',
+        '-d', './repair_sql',
         '-db', db,
         '-table', table, 
         '-vars', "SET query_timeout=3600;SET exec_mem_limit=10737418240"
@@ -36,7 +37,29 @@ def run_dumper(db, table):
         stderr=PIPE)
     p.wait()
     out = p.stdout.read()
-    print(">>", out)
+    print(">" * 100)
+    print(out)
+
+def run_loader():
+    p = Popen(
+        ['./myloader'
+        '-dp', '10.7.51.44:8040,10.7.66.46:8040,10.7.84.112:8040,10.7.187.18:8040',
+        '-P', 9030,
+        '-d', './repair_sql',
+        '-h', '10.7.85.221',
+        '-m', 'doris'
+        '-u', 'root',
+        '-p', '123456',
+        '-t', 8
+        ],
+        stdin=PIPE,
+        stdout=PIPE,
+        stderr=PIPE 
+    )
+    p.wait()
+    out = p.stdout.read()
+    print(">" * 100)
+    print(out)
 
 
 def do():
@@ -44,9 +67,14 @@ def do():
     cur = conn.cursor()
     # 检查所有含有decimal类型的表
 
+    # for loader
     cur.execute("select TABLE_SCHEMA,table_name from columns where column_type like 'decimal%' group by table_schema,table_name;")
     for db, table in cur.fetchall():
         run_dumper(db, table)
+
+    # for loader
+    run_loader()
+
     cur.close()
     conn.close()
 
