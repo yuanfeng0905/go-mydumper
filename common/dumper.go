@@ -36,9 +36,11 @@ func dumpDatabaseSchema(log *xlog.Log, conn *Connection, args *Args, database st
 	log.Info("dumping.database[%s].schema...", database)
 }
 
-func dumpTableSchema(log *xlog.Log, conn *Connection, args *Args, database string, table string) {
+func dumpTableSchema(log *xlog.Log, conn *Connection, args *Args, database string, table string) error {
 	qr, err := conn.Fetch(fmt.Sprintf("SHOW CREATE TABLE `%s`.`%s`", database, table))
-	AssertNil(err)
+	if err != nil {
+		return err
+	}
 	schema := qr.Rows[0][1].String() + ";\n"
 
 	// doris模式下，需要特殊处理聚合模式的表
@@ -52,8 +54,11 @@ func dumpTableSchema(log *xlog.Log, conn *Connection, args *Args, database strin
 	}
 
 	file := fmt.Sprintf("%s/%s.%s-schema.sql", args.Outdir, database, table)
-	WriteFile(file, schema)
+	if err := WriteFile(file, schema); err != nil {
+		return err
+	}
 	log.Info("dumping.table[%s.%s].schema...", database, table)
+	return nil
 }
 
 // doris 表导出为csv格式
@@ -354,9 +359,15 @@ func Dumper(log *xlog.Log, args *Args) {
 	for i, database := range databases {
 		for _, table := range tables[i] {
 			conn := pool.Get()
-			dumpTableSchema(log, conn, args, database, table)
-
 			wg.Add(1)
+
+			if err := dumpTableSchema(log, conn, args, database, table); err != nil {
+				log.Error("dumping.table[%s.%s] error:%v", database, table, err)
+				wg.Done()
+				pool.Put(conn)
+				continue // 跳过当前表
+			}
+
 			go func(conn *Connection, database string, table string) {
 				defer func() {
 					if err := recover(); err != nil {
