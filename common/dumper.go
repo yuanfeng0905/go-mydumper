@@ -116,10 +116,12 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 				switch {
 				case v.IsSigned(), v.IsUnsigned(), v.IsFloat(), v.IsIntegral(), v.Type() == querypb.Type_DECIMAL:
 					values = append(values, str)
-				case v.IsTemporal() && args.Mode == "doris": // 兼容doris模式下，日期/时间对象不编码为带引号的字符串
+				case v.IsTemporal(): // 兼容doris模式下，日期/时间对象不编码为带引号的字符串
 					values = append(values, str)
 				default:
 					val := fmt.Sprintf("%s", EscapeBytes(v.Raw()))
+					val = strings.ReplaceAll(val, "\t", "")
+					val = strings.ReplaceAll(val, "\n", "")
 					values = append(values, val)
 				}
 			}
