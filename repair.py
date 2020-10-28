@@ -22,7 +22,7 @@ def Conn(host=None, port=None, user=None, passwd=None):
 def run_dumper(db, table):
     p = Popen(
         ['./mydumper', 
-        '-m', 'doris', # doris 模式
+        '-m', 'doris', 
         '-h', '10.8.185.190', 
         '-P', 9030, 
         '-u', 'root',
