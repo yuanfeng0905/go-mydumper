@@ -47,11 +47,45 @@ func usage() {
 	flag.PrintDefaults()
 }
 
+// 解析命令行，覆盖
+func recoveryConfig(args *common.Args) {
+	if flagHost != "" && flagPort != nil {
+		args.Address = fmt.Sprintf("%s:%d", flagHost, *flagPort)
+	}
+	if flagUser != "" {
+		args.User = flagUser
+	}
+	if flagPasswd != "" {
+		args.Password = flagPasswd
+	}
+	if flagDB != "" {
+		args.Database = flagDB
+	}
+	if flagTable != "" {
+		args.Table = flagTable
+	}
+	if flagThreads != nil {
+		args.Threads = *flagThreads
+	}
+	if flagOutDir != "" {
+		args.Outdir = flagOutDir
+	}
+	if flagMode != "" {
+		args.Mode = flagMode
+	}
+	if flagChunkSize != nil {
+		args.ChunksizeInMB = *flagChunkSize
+	}
+	if flagVars != "" {
+		args.SessionVars = flagVars
+	}
+}
+
 func main() {
 	flag.Usage = func() { usage() }
 	flag.Parse()
 
-	args, err := parseDumperConfig(flagConfig)
+	args, err := common.ParseDumperConfig(flagConfig)
 	common.AssertNil(err)
 
 	if _, err := os.Stat(args.Outdir); os.IsNotExist(err) {
