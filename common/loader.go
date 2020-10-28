@@ -187,7 +187,6 @@ func restoreDorisTable(log *xlog.Log, table string, addr string, conn *Connectio
 					return nil, err
 
 				}
-				c.SetDeadline(time.Now().Add(600 * time.Second)) // doris 默认超时
 				return c, nil
 			},
 		},
