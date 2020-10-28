@@ -90,8 +90,6 @@ func main() {
 
 	recoveryConfig(args)
 
-	log.Info("%v", args)
-
 	if _, err := os.Stat(args.Outdir); os.IsNotExist(err) {
 		x := os.MkdirAll(args.Outdir, 0777)
 		common.AssertNil(x)
