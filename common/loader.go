@@ -196,7 +196,7 @@ func restoreDorisTable(log *xlog.Log, table string, addr string, conn *Connectio
 		},
 		Timeout: 600 * time.Second,
 	}
-	_url := fmt.Sprintf("http://%s/api/%s/%s/_stream_load", addr, db, table)
+	_url := fmt.Sprintf("http://%s/api/%s/%s/_stream_load", addr, db, tbl)
 
 	for {
 		if err := submitDorisTask(log, _url, cli, header, body, args); err != nil {
