@@ -1,6 +1,7 @@
 #coding:utf-8
 
 from subprocess import *
+import os
 from pymysql.connections import Connection
 
 def Conn(host=None, port=None, user=None, passwd=None):
@@ -18,7 +19,7 @@ def Conn(host=None, port=None, user=None, passwd=None):
 
 
 def run_dumper(db, table):
-    p = Popen(
+    p = call(
         ['./mydumper', 
         '-m', 'doris', 
         '-h', '10.8.185.190', 
@@ -29,16 +30,11 @@ def run_dumper(db, table):
         '-db', db,
         '-table', table, 
         '-vars', "SET query_timeout=3600;SET exec_mem_limit=10737418240"
-        ],
-        stdin=PIPE,
-        stdout=PIPE,
-        stderr=PIPE)
-    print(">" * 100)
-    for l in p.stdout.readlines():
-        print(l)
+        ])
+   
 
 def run_loader():
-    p = Popen(
+    p = call(
         ['./myloader',
         '-dp', '10.7.51.44:8040,10.7.66.46:8040,10.7.84.112:8040,10.7.187.18:8040',
         '-P', '9030',
@@ -48,15 +44,7 @@ def run_loader():
         '-u', 'root',
         '-p', '123456',
         '-t', 8
-        ],
-        stdin=PIPE,
-        stdout=PIPE,
-        stderr=PIPE 
-    )
-    p.wait()
-    out = p.stdout.read()
-    print(">" * 100)
-    print(out)
+        ])
 
 
 def do():
