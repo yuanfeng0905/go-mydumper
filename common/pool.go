@@ -91,7 +91,7 @@ func (p *Pool) Get() *Connection {
 		}
 		conn.client = client // update
 		if conn.vars != "" {
-			conn.Execute(vars)
+			conn.Execute(conn.vars)
 		}
 	}
 
