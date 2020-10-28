@@ -56,7 +56,9 @@ def do():
     cmd_lines = []
     cur.execute("select TABLE_SCHEMA,table_name from information_schema.columns where column_type like 'decimal%' group by table_schema,table_name;")
     for db, table in cur.fetchall():
-        cmd_lines.append('./mydumper -m doris -h 10.8.185.190 -P 9030 -u root -p \!@#\$411589559 -d ./repair_sql -db %s -table %s -vars "SET query_timeout=3600;SET exec_mem_limit=10737418240"' % (db, table))
+        if table == 'product_channel_report':
+            continue
+        cmd_lines.append('./mydumper -m doris -h 10.8.185.190 -t 16 -P 9030 -u root -p \!@#\$411589559 -d ./repair_sql -db %s -table %s -vars "SET query_timeout=3600;SET exec_mem_limit=10737418240"' % (db, table))
     
     output = '\n'.join(cmd_lines)
     with open('repair_bash.sh', 'w') as f:
