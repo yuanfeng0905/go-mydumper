@@ -361,13 +361,6 @@ func Dumper(log *xlog.Log, args *Args) {
 			conn := pool.Get()
 			wg.Add(1)
 
-			if err := dumpTableSchema(log, conn, args, database, table); err != nil {
-				log.Error("dumping.table[%s.%s] error:%v", database, table, err)
-				wg.Done()
-				pool.Put(conn)
-				continue // 跳过当前表
-			}
-
 			go func(conn *Connection, database string, table string) {
 				defer func() {
 					if err := recover(); err != nil {
@@ -377,6 +370,12 @@ func Dumper(log *xlog.Log, args *Args) {
 					wg.Done()
 					pool.Put(conn)
 				}()
+
+				if err := dumpTableSchema(log, conn, args, database, table); err != nil {
+					log.Error("dumping.table.schema[%s.%s] error:%v", database, table, err)
+					return
+				}
+
 				log.Info("dumping.table[%s.%s].datas.thread[%d]...", database, table, conn.ID)
 				if args.Mode == "doris" {
 					dumpDorisTable(log, conn, args, database, table)
