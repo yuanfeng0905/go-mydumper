@@ -46,6 +46,9 @@ func dumpTableSchema(log *xlog.Log, conn *Connection, args *Args, database strin
 		if strings.Index(schema, "UNIQUE KEY") != -1 {
 			schema = strings.ReplaceAll(schema, "REPLACE", "") // FIXME
 		}
+		if strings.Index(schema, "varchar(255)") != -1 {
+			schema = strings.ReplaceAll(schema, "varchar(255)", "varchar(512)") // 扩容
+		}
 	}
 
 	file := fmt.Sprintf("%s/%s.%s-schema.sql", args.Outdir, database, table)
@@ -111,7 +114,7 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 				case v.IsTemporal() && args.Mode == "doris": // 兼容doris模式下，日期/时间对象不编码为带引号的字符串
 					values = append(values, str)
 				default:
-					val := fmt.Sprintf("\"%s\"", EscapeBytes(v.Raw()))
+					val := fmt.Sprintf("%s", EscapeBytes(v.Raw()))
 					values = append(values, val)
 				}
 			}

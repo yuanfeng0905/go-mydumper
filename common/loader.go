@@ -159,9 +159,12 @@ func submitDorisTask(log *xlog.Log, url string, client *http.Client, header stri
 		if err := json.Unmarshal(buf, &dorisResp); err != nil {
 			return err
 		}
+
 		// 导入失败
 		if dorisResp.Status == "Fail" {
-			return fmt.Errorf("request url:%s error: %s, error url:%s", url, dorisResp.Message, dorisResp.ErrorURL)
+			// 这种级别的失败，重试无用，写日志手动处理
+			log.Warning("request url:%s error: %s, error url:%s", url, dorisResp.Message, dorisResp.ErrorURL)
+			return
 		}
 		if dorisResp.NumberTotalRows != dorisResp.NumberLoadedRows {
 			// 过滤了行，写警告日志，人工排查
