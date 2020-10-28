@@ -26,7 +26,7 @@ def run_dumper(db, table):
         '-h', '10.8.185.190', 
         '-P', 9030, 
         '-u', 'root',
-        '-p', '!@#$411589559',
+        '-p', "\!@#\$411589559",
         '-d', './repair_sql',
         '-db', db,
         '-table', table, 
