@@ -100,7 +100,7 @@ Usage: ./bin/myloader -h [HOST] -P [PORT] -u [USER] -p [PASSWORD] -d  [DIR]
   -m string
         doris mode for support Doris MPP (default "mysql")
   -dp string
-        doris mode for HTTP Load address
+        doris mode for HTTP Load address（example: "127.0.0.1:8040,127.0.0.2:8040"）
 
 Examples:
 $./bin/myloader -h 192.168.0.2 -P 3306 -u mock -p mock -d sbtest.sql

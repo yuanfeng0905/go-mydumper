@@ -36,8 +36,8 @@ func init() {
 	flag.StringVar(&flagDir, "d", "", "Directory of the dump to import")
 	flag.IntVar(&flagThreads, "t", 16, "Number of threads to use")
 	flag.BoolVar(&flagOverwriteTables, "o", false, "Drop tables if they already exist")
-	flag.StringVar(&flagMode, "m", "", "doris mode for support Doris MPP")
-	flag.StringVar(&flagDorisLoadAddress, "dp", "", "doris mode for HTTP Load address")
+	flag.StringVar(&flagMode, "m", "", "doris mode for support Doris MPP (default \"mysql\")")
+	flag.StringVar(&flagDorisLoadAddress, "dp", "", "doris mode for HTTP Load address (example: \"127.0.0.1:8040,127.0.0.2:8040\")")
 }
 
 func usage() {
