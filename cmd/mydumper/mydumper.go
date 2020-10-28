@@ -88,6 +88,8 @@ func main() {
 	args, err := common.ParseDumperConfig(flagConfig)
 	common.AssertNil(err)
 
+	recoveryConfig(args)
+
 	if _, err := os.Stat(args.Outdir); os.IsNotExist(err) {
 		x := os.MkdirAll(args.Outdir, 0777)
 		common.AssertNil(x)
