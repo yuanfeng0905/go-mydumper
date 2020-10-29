@@ -122,17 +122,15 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 					val := fmt.Sprintf("%s", EscapeBytes(v.Raw()))
 					val = strings.ReplaceAll(val, "\t", "")
 					val = strings.ReplaceAll(val, "\n", "")
-					if len(val) > 512 {
-						rVal := []rune(val)
-						if len(rVal) > 512 {
-							rVal = rVal[:512] // 先按512个字符截取
-						}
+					rVal := []rune(val)
+					if len(rVal) > 512 {
+						rVal = rVal[:512] // 先按512个字符截取
 						for len(string(rVal)) > 512 {
 							rVal = rVal[:len(rVal)-1] // 按字符缩进
 						}
 						values = append(values, string(rVal))
 					} else {
-						values = append(values, val)
+						values = append(values, string(rVal[:len(rVal)-2])) // 解决0.11.24版本字符串截取bug
 					}
 				}
 			}
