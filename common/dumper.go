@@ -132,22 +132,16 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 								break
 							}
 						}
-						if !utf8.ValidString(val) {
-							log.Warning("dumping.table[%s.%s] invalid string value[%v]", database, table, val)
-						} else {
-							values = append(values, val)
+					}
+					rVal := []rune(val)
+					if len(rVal) > 512 {
+						rVal = rVal[:512] // 先按512个字符截取
+						for len(string(rVal)) > 512 {
+							rVal = rVal[:len(rVal)-1] // 按字符缩进
 						}
+						values = append(values, string(rVal))
 					} else {
-						rVal := []rune(val)
-						if len(rVal) > 512 {
-							rVal = rVal[:512] // 先按512个字符截取
-							for len(string(rVal)) > 512 {
-								rVal = rVal[:len(rVal)-1] // 按字符缩进
-							}
-							values = append(values, string(rVal))
-						} else {
-							values = append(values, val)
-						}
+						values = append(values, val)
 					}
 				}
 			}
