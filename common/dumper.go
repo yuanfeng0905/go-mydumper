@@ -122,6 +122,9 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 					val := fmt.Sprintf("%s", EscapeBytes(v.Raw()))
 					val = strings.ReplaceAll(val, "\t", "")
 					val = strings.ReplaceAll(val, "\n", "")
+					if len(val) > 512 {
+						val = val[:512] // 这里截取的很粗暴，末端中文会出现乱码
+					}
 					values = append(values, val)
 				}
 			}
