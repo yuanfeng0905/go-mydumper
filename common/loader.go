@@ -131,7 +131,7 @@ func _newDorisLoadRequest(url, header, body, username, password string) (req *ht
 
 	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
 	req.Header.Add("columns", header)
-	req.Header.Add("strict_mode", "true")
+	//req.Header.Add("strict_mode", "true")
 	req.SetBasicAuth(username, password)
 
 	return
