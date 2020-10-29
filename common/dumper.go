@@ -16,6 +16,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"unicode/utf8"
 
 	querypb "github.com/xelabs/go-mysqlstack/sqlparser/depends/query"
 	"github.com/xelabs/go-mysqlstack/xlog"
@@ -122,17 +123,28 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 					val := fmt.Sprintf("%s", EscapeBytes(v.Raw()))
 					val = strings.ReplaceAll(val, "\t", "")
 					val = strings.ReplaceAll(val, "\n", "")
-					rVal := []rune(val)
-					if len(rVal) > 512 {
-						rVal = rVal[:512] // 先按512个字符截取
-						for len(string(rVal)) > 512 {
-							rVal = rVal[:len(rVal)-1] // 按字符缩进
+
+					if !utf8.ValidString(val) {
+						AssertNil(fmt.Errorf("dumping.table[%s.%s] invalid string value[%v]", database, table, val))
+						for {
+							if r, sz := utf8.DecodeLastRuneInString(val); r == utf8.RuneError && sz != 0 {
+								val = val[:len(val)-1] // 去掉字符串尾部无效utf8编码 fix for doris 0.11.24
+							} else {
+								break
+							}
 						}
-						values = append(values, string(rVal))
-					} else if len(val) == 512 {
-						values = append(values, string(rVal[:len(rVal)-2])) // 解决0.11.24版本字符串截取bug
-					} else {
 						values = append(values, val)
+					} else {
+						rVal := []rune(val)
+						if len(rVal) > 512 {
+							rVal = rVal[:512] // 先按512个字符截取
+							for len(string(rVal)) > 512 {
+								rVal = rVal[:len(rVal)-1] // 按字符缩进
+							}
+							values = append(values, string(rVal))
+						} else {
+							values = append(values, val)
+						}
 					}
 				}
 			}
