@@ -80,7 +80,7 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 				continue
 			}
 
-			fields = append(fields, fmt.Sprintf("%s", f.Name))
+			fields = append(fields, fmt.Sprintf("`%s`", f.Name))
 			replacement, ok := args.Selects[table][f.Name]
 			if ok {
 				extFields = append(extFields, fmt.Sprintf("%s AS `%s`", replacement, f.Name))
