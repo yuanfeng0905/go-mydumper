@@ -123,6 +123,7 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 					val = strings.ReplaceAll(val, "\t", "")
 					val = strings.ReplaceAll(val, "\n", "")
 					if remain := len(val) - 512; remain > 0 {
+						log.Warning("remain string=%s, run len=%d, byte len=%d, remain=%d", val, len([]rune(val)), len(val), remain)
 						_r := []rune(val)
 						val = string(_r[0 : len(_r)-remain])
 					}
