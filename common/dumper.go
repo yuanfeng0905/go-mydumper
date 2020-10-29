@@ -129,8 +129,10 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 							rVal = rVal[:len(rVal)-1] // 按字符缩进
 						}
 						values = append(values, string(rVal))
-					} else {
+					} else if len(rVal) > 400 {
 						values = append(values, string(rVal[:len(rVal)-2])) // 解决0.11.24版本字符串截取bug
+					} else {
+						values = append(values, val)
 					}
 				}
 			}
