@@ -125,7 +125,7 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 					val = strings.ReplaceAll(val, "\n", "")
 
 					if !utf8.ValidString(val) {
-						AssertNil(fmt.Errorf("dumping.table[%s.%s] invalid string value[%v]", database, table, val))
+						log.Warning("dumping.table[%s.%s] invalid string value[%v]", database, table, val)
 						for {
 							if r, sz := utf8.DecodeLastRuneInString(val); r == utf8.RuneError && sz != 0 {
 								val = val[:len(val)-1] // 去掉字符串尾部无效utf8编码 fix for doris 0.11.24
