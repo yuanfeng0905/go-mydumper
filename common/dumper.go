@@ -389,10 +389,10 @@ func Dumper(log *xlog.Log, args *Args) {
 
 			go func(conn *Connection, database string, table string) {
 				defer func() {
-					// if err := recover(); err != nil {
-					// 	// 线程奔溃，先记录到错误日志，再手动分析
-					// 	log.Error("dumping.table[%s.%s] error:%v", database, table, err)
-					// }
+					if err := recover(); err != nil {
+						// 线程奔溃，先记录到错误日志，再手动分析
+						log.Error("dumping.table[%s.%s] error:%v", database, table, err)
+					}
 					wg.Done()
 					pool.Put(conn)
 				}()
