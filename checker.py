@@ -63,9 +63,14 @@ def check(db, table):
 def escape(s):
     return s.replace('!', "\!").replace('$', "\$")
 
+def gendir(db):
+    dir = './dump_%s_sql' % db
+    if not os.path.exists(dir):
+        os.mkdir(dir)
 
-def load(dir):
+def load(db):
     global _new_conn
+    dir = gendir(db)
     cmd = './myloader -dp 10.7.51.44:8040,10.7.66.46:8040,10.7.84.112:8040,10.7.187.18:8040 -P {port} -d {dir} -h {host} -m doris -u {user} -p {password} -t 8'.format(
         dir=dir,
         host=_new_conn['host'],
@@ -90,7 +95,7 @@ def dump(db, table):
         table=table,
         user=_old_conn['username'],
         password=escape(_old_conn['password']),
-        dir=_old_conn['dir'],
+        dir=gendir(db),
         cs=128,  # 默认chunk size 1个G
         vars='"SET query_timeout=7200;SET exec_mem_limit=20737418240"')
     print("cmd=%s" % cmd)
@@ -111,24 +116,21 @@ def dump(db, table):
 @click.option('--new_user', type=str)
 @click.option('--new_password', type=str)
 @click.option('--db', help='target db, will scan all tables.')
-@click.option('--dir')
 def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
-       new_user, new_password, dir):
+       new_user, new_password):
     global _new_conn, _old_conn
     _old_conn = {
         'host': old_host,
         'port': old_port,
         'username': old_user,
-        'password': old_password,
-        'dir': dir
+        'password': old_password
     }
 
     _new_conn = {
         'host': new_host,
         'port': new_port,
         'username': new_user,
-        'password': new_password,
-        'dir': dir
+        'password': new_password
     }
 
     print('old_conn: {}'.format(_old_conn))
@@ -148,7 +150,7 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
     dump(db, ','.join(dumps))
 
     # load
-    load(_new_conn['dir'])
+    load(db)
 
 
 if __name__ == '__main__':
