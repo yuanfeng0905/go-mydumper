@@ -1,1 +1,2 @@
 PyMySQL==0.9.3
+click==7.0
