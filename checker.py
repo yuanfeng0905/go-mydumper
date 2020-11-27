@@ -92,7 +92,7 @@ def dump(db, table):
         password=escape(_old_conn['password']),
         dir=_old_conn['dir'],
         cs=128,  # 默认chunk size 1个G
-        vars='"SET query_timeout=3600;SET exec_mem_limit=20737418240"')
+        vars='"SET query_timeout=7200;SET exec_mem_limit=20737418240"')
     print("cmd=%s" % cmd)
     code = os.system(cmd)
     if code == 0:
