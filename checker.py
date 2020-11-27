@@ -57,23 +57,28 @@ def check(db, table):
 
         if old_cnt - new_cnt > 1000:
             print("=======> need recovery {}.{}".format(db, table))
-            return (db, table)
+            return True
 
 
 def escape(s):
     return s.replace('!', "\!").replace('$', "\$")
 
+
 def load(dir):
     global _new_conn
     cmd = './myloader -dp 10.7.51.44:8040,10.7.66.46:8040,10.7.84.112:8040,10.7.187.18:8040 -P {port} -d {dir} -h {host} -m doris -u {user} -p {password} -t 8'.format(
-        dir=dir, host=_new_conn['host'], port=_new_conn['port'], user=_new_conn['username'], password=escape(_new_conn['password'])
-    )
+        dir=dir,
+        host=_new_conn['host'],
+        port=_new_conn['port'],
+        user=_new_conn['username'],
+        password=escape(_new_conn['password']))
     print("cmd=%s" % cmd)
     code = os.system(cmd)
     if code == 0:
         print("=========> {} load ok.".format(dir))
     else:
         print("=========> {} load fail.".format(dir))
+
 
 def dump(db, table):
     """ 从旧数据源dump表 """
@@ -130,15 +135,18 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
     print('---------------------------------')
     print('new_conn: {}'.format(_new_conn))
 
-    dumps = []
     # 检查差异表
+    dumps = []
     for tb in all_tables(db):
-        target = check(db, tb)
-        if target:
-            dumps.append(target)
+        if check(db, tb):
+            dumps.append(tb)
+    
+    if not dumps:
+        return
+
     # dump 差异表
-    for db, table in dumps:
-        dump(db, table)
+    dump(db, ','.join(dumps))
+
     # load
     load(_new_conn['dir'])
 
