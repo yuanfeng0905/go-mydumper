@@ -69,7 +69,7 @@ def gendir(db):
         os.mkdir(dir)
     return dir
 
-def load(db):
+def load(db, force=False):
     global _new_conn
     dir = gendir(db)
     cmd = './myloader -dp 10.7.51.44:8040,10.7.66.46:8040,10.7.84.112:8040,10.7.187.18:8040 -P {port} -d {dir} -h {host} -m doris -u {user} -p {password} -t 8'.format(
@@ -78,6 +78,9 @@ def load(db):
         port=_new_conn['port'],
         user=_new_conn['username'],
         password=escape(_new_conn['password']))
+    if force:
+        cmd = cmd + ' -o'
+        
     print("cmd=%s" % cmd)
     code = os.system(cmd)
     if code == 0:
@@ -117,8 +120,9 @@ def dump(db, table):
 @click.option('--new_user', type=str)
 @click.option('--new_password', type=str)
 @click.option('--db', help='target db, will scan all tables.')
+@click.option('--force', help='force drop table', is_flag=True)
 def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
-       new_user, new_password):
+       new_user, new_password, force):
     global _new_conn, _old_conn
     _old_conn = {
         'host': old_host,
@@ -151,7 +155,7 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
     dump(db, ','.join(dumps))
 
     # load
-    load(db)
+    load(db, force=force)
 
 
 if __name__ == '__main__':
