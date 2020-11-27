@@ -6,16 +6,8 @@ import click
 import os
 
 _new_conn = {
-    'host': '10.7.177.42',
-    'port': 9030,
-    'username': 'root',
-    'password': '123456'
 }
 _old_conn = {
-    'host': '10.8.185.190',
-    'port': 9030,
-    'username': 'root',
-    'password': '!@#$411589559'
 }
 
 
@@ -49,6 +41,7 @@ def all_tables(db):
 
 
 def check(db, table):
+    global _new_conn, _old_conn
     ret = []
     with get_doris_cur(_old_conn) as old_cur:
         old_cur.execute('select count(*) from {db}.{tb}'.format(db=db,
@@ -71,22 +64,47 @@ def check(db, table):
 
 
 def dump(db, table):
+    global _new_conn, _old_conn
     code = os.system(
-        './mydumper -P {port} -h {host} -db {db} -table {table} -t 1 -u {user} -p {password} -m doris -d ./sql'
+        './mydumper -P {port} -h {host} -db {db} -table {table} -t 1 -u {user} -p {password} -m doris -d ./sql -vars {vars}'
         .format(port=_new_conn['port'],
                 host=_new_conn['host'],
                 db=db,
                 table=table,
                 user=_new_conn['user'],
-                password=_new_conn['password']))
+                password=_new_conn['password']),
+                vars='SET query_timeout=3600;SET exec_mem_limit=10737418240')
     if code == 0:
         print("=========> {}.{} dump ok.".format(db, table))
     else:
         print("=========> {}.{} dump fail.".format(db, table))
 
 @click.command()
-@click.option('-db')
-def do(db):
+@click.option('--old_host')
+@click.option('--old_port')
+@click.option('--old_user')
+@click.option('--old_password')
+@click.option('--new_host')
+@click.option('--new_port')
+@click.option('--new_user')
+@click.option('--new_password')
+@click.option('--db', help='要核对修复的目标db，默认会扫描所有表')
+def do(db, old_host, old_port, old_user, old_password, new_host, new_port, new_user, new_password):
+    global _new_conn, _old_conn
+    _old_conn = {
+        'host': old_host,
+        'port': old_port,
+        'username': old_user,
+        'password': old_password
+    }
+
+    _new_conn = {
+        'host': new_host,
+        'port': new_port,
+        'username': new_user,
+        'password': new_password
+    } 
+    
     dumps = []
     for tb in all_tables(db):
         dumps = check(db, tb)
