@@ -60,6 +60,9 @@ def check(db, table):
             return (db, table)
 
 
+def escape(s):
+    return s.replace('!', '\!').replace('@', '\@')
+
 def dump(db, table):
     """ 从旧数据源dump表 """
     global _new_conn, _old_conn
@@ -71,7 +74,7 @@ def dump(db, table):
             db=db,
             table=table,
             user=_old_conn['username'],
-            password=_old_conn['password'],
+            password=escape(_old_conn['password']),
             dir=_old_conn['dir'],
             cs=1024,  # 默认chunk size 1个G
             vars='"SET query_timeout=3600;SET exec_mem_limit=20737418240"'))
