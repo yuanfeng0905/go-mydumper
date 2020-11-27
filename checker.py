@@ -71,7 +71,7 @@ def dump(db, table):
                 host=_new_conn['host'],
                 db=db,
                 table=table,
-                user=_new_conn['user'],
+                user=_new_conn['username'],
                 password=_new_conn['password']),
                 vars='SET query_timeout=3600;SET exec_mem_limit=10737418240')
     if code == 0:
