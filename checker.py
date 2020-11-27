@@ -81,11 +81,11 @@ def dump(db, table):
 
 @click.command()
 @click.option('--old_host', type=str)
-@click.option('--old_port', type=str)
+@click.option('--old_port', type=int)
 @click.option('--old_user', type=str)
 @click.option('--old_password', type=str)
 @click.option('--new_host', type=str)
-@click.option('--new_port', type=str)
+@click.option('--new_port', type=int)
 @click.option('--new_user', type=str)
 @click.option('--new_password', type=str)
 @click.option('--db', help='target db, will scan all tables.')
