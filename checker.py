@@ -61,7 +61,7 @@ def check(db, table):
 
 
 def escape(s):
-    return s.replace('!', "\\\!").replace('@', "\\\@")
+    return s.replace('!', "\!").replace('$', "\$")
 
 
 def dump(db, table):
