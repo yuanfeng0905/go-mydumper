@@ -63,21 +63,22 @@ def check(db, table):
 def escape(s):
     return s.replace('!', "\\\!").replace('@', "\\\@")
 
+
 def dump(db, table):
     """ 从旧数据源dump表 """
     global _new_conn, _old_conn
-    code = os.system(
-        './mydumper -P {port} -h {host} -db {db} -table {table} -t 1 -u {user} -p {password} -m doris -d {dir} -vars {vars} -chunk-size {cs}'
-        .format(
-            port=_old_conn['port'],
-            host=_old_conn['host'],
-            db=db,
-            table=table,
-            user=_old_conn['username'],
-            password=escape(_old_conn['password']),
-            dir=_old_conn['dir'],
-            cs=1024,  # 默认chunk size 1个G
-            vars='"SET query_timeout=3600;SET exec_mem_limit=20737418240"'))
+    cmd = './mydumper -P {port} -h {host} -db {db} -table {table} -t 1 -u {user} -p {password} -m doris -d {dir} -vars {vars} -chunk-size {cs}'.format(
+        port=_old_conn['port'],
+        host=_old_conn['host'],
+        db=db,
+        table=table,
+        user=_old_conn['username'],
+        password=escape(_old_conn['password']),
+        dir=_old_conn['dir'],
+        cs=1024,  # 默认chunk size 1个G
+        vars='"SET query_timeout=3600;SET exec_mem_limit=20737418240"')
+    print("cmd=%s" % cmd)
+    code = os.system(cmd)
     if code == 0:
         print("=========> {}.{} dump ok.".format(db, table))
     else:
