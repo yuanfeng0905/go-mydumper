@@ -83,7 +83,7 @@ def load(dir):
 def dump(db, table):
     """ 从旧数据源dump表 """
     global _old_conn
-    cmd = './mydumper -P {port} -h {host} -db {db} -table {table} -t 1 -u {user} -p {password} -m doris -d {dir} -vars {vars} -chunk-size {cs}'.format(
+    cmd = './mydumper -P {port} -h {host} -db {db} -table {table} -t 8 -u {user} -p {password} -m doris -d {dir} -vars {vars} -chunk-size {cs}'.format(
         port=_old_conn['port'],
         host=_old_conn['host'],
         db=db,
