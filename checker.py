@@ -63,10 +63,21 @@ def check(db, table):
 def escape(s):
     return s.replace('!', "\!").replace('$', "\$")
 
+def load(dir):
+    global _new_conn
+    cmd = './myloader -dp 10.7.51.44:8040,10.7.66.46:8040,10.7.84.112:8040,10.7.187.18:8040 -P {port} -d {dir} -h {host} -m doris -u {user} -p {password} -t 8'.format(
+        dir=dir, host=_new_conn['host'], port=_new_conn['port'], user=_new_conn['username'], password=_new_conn['password']
+    )
+    print("cmd=%s" % cmd)
+    code = os.system(cmd)
+    if code == 0:
+        print("=========> {} load ok.".format(dir))
+    else:
+        print("=========> {} load fail.".format(dir))
 
 def dump(db, table):
     """ 从旧数据源dump表 """
-    global _new_conn, _old_conn
+    global _old_conn
     cmd = './mydumper -P {port} -h {host} -db {db} -table {table} -t 1 -u {user} -p {password} -m doris -d {dir} -vars {vars} -chunk-size {cs}'.format(
         port=_old_conn['port'],
         host=_old_conn['host'],
@@ -75,7 +86,7 @@ def dump(db, table):
         user=_old_conn['username'],
         password=escape(_old_conn['password']),
         dir=_old_conn['dir'],
-        cs=1024,  # 默认chunk size 1个G
+        cs=128,  # 默认chunk size 1个G
         vars='"SET query_timeout=3600;SET exec_mem_limit=20737418240"')
     print("cmd=%s" % cmd)
     code = os.system(cmd)
@@ -112,6 +123,7 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
         'port': new_port,
         'username': new_user,
         'password': new_password,
+        'dir': dir
     }
 
     print('old_conn: {}'.format(_old_conn))
@@ -119,13 +131,16 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
     print('new_conn: {}'.format(_new_conn))
 
     dumps = []
+    # 检查差异表
     for tb in all_tables(db):
         target = check(db, tb)
         if target:
             dumps.append(target)
-
+    # dump 差异表
     for db, table in dumps:
         dump(db, table)
+    # load
+    load(_new_conn['dir'])
 
 
 if __name__ == '__main__':
