@@ -104,6 +104,10 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port, new_u
         'username': new_user,
         'password': new_password
     } 
+
+    print('old_conn: {}'.format(_old_conn))
+    print('---------------------------------')
+    print('new_conn: {}'.format(_new_conn))
     
     dumps = []
     for tb in all_tables(db):
