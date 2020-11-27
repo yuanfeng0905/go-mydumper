@@ -88,7 +88,7 @@ def dump(db, table):
 @click.option('--new_port')
 @click.option('--new_user')
 @click.option('--new_password')
-@click.option('--db', help='要核对修复的目标db，默认会扫描所有表')
+@click.option('--db', help='target db, will scan all tables.')
 def do(db, old_host, old_port, old_user, old_password, new_host, new_port, new_user, new_password):
     global _new_conn, _old_conn
     _old_conn = {
