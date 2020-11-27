@@ -66,7 +66,7 @@ def escape(s):
 def load(dir):
     global _new_conn
     cmd = './myloader -dp 10.7.51.44:8040,10.7.66.46:8040,10.7.84.112:8040,10.7.187.18:8040 -P {port} -d {dir} -h {host} -m doris -u {user} -p {password} -t 8'.format(
-        dir=dir, host=_new_conn['host'], port=_new_conn['port'], user=_new_conn['username'], password=_new_conn['password']
+        dir=dir, host=_new_conn['host'], port=_new_conn['port'], user=_new_conn['username'], password=escape(_new_conn['password'])
     )
     print("cmd=%s" % cmd)
     code = os.system(cmd)
