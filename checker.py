@@ -66,13 +66,14 @@ def check(db, table):
 def dump(db, table):
     global _new_conn, _old_conn
     code = os.system(
-        './mydumper -P {port} -h {host} -db {db} -table {table} -t 1 -u {user} -p {password} -m doris -d ./sql -vars {vars}'
+        './mydumper -P {port} -h {host} -db {db} -table {table} -t 1 -u {user} -p {password} -m doris -d {dir} -vars {vars}'
         .format(port=_new_conn['port'],
                 host=_new_conn['host'],
                 db=db,
                 table=table,
                 user=_new_conn['username'],
                 password=_new_conn['password'],
+                dir=_new_conn['dir'],
                 vars='"SET query_timeout=3600;SET exec_mem_limit=20737418240"'))
     if code == 0:
         print("=========> {}.{} dump ok.".format(db, table))
@@ -89,7 +90,8 @@ def dump(db, table):
 @click.option('--new_user', type=str)
 @click.option('--new_password', type=str)
 @click.option('--db', help='target db, will scan all tables.')
-def do(db, old_host, old_port, old_user, old_password, new_host, new_port, new_user, new_password):
+@click.option('--dir')
+def do(db, old_host, old_port, old_user, old_password, new_host, new_port, new_user, new_password, dir):
     global _new_conn, _old_conn
     _old_conn = {
         'host': old_host,
@@ -102,7 +104,8 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port, new_u
         'host': new_host,
         'port': new_port,
         'username': new_user,
-        'password': new_password
+        'password': new_password,
+        'dir': dir
     } 
 
     print('old_conn: {}'.format(_old_conn))
