@@ -17,13 +17,13 @@ def get_doris_cur(conn):
     _connection_settings['passwd'] = conn['password']
     _connection_settings['use_unicode'] = True
     _connection_settings['charset'] = 'utf8'
-    conn = Connection(**_connection_settings)
-    conn.autocommit(True)
+    c = Connection(**_connection_settings)
+    c.autocommit(True)
 
-    cur = conn.cursor()
+    cur = c.cursor()
     yield cur
     cur.close()
-    conn.close()
+    c.close()
 
 def all_tables(db):
     tbs = []
@@ -32,6 +32,7 @@ def all_tables(db):
         cur.execute('show tables')
         for l in cur.fetchall():
             tbs.append(l[0])
+    return tbs
 
 
 def check(db, table):
