@@ -67,6 +67,7 @@ def gendir(db):
     dir = './dump_%s_sql' % db
     if not os.path.exists(dir):
         os.mkdir(dir)
+    return dir
 
 def load(db):
     global _new_conn
