@@ -4,8 +4,8 @@ from contextlib import contextmanager
 from pymysql.connections import Connection
 import click
 
-_new_conn = {'host': '127.0.0.1', 'port': 9030, 'username': 'root', 'password': 123456}
-_old_conn = {'host': '233', 'port': 9030, 'username': 'root', 'password': '!@#$411589559'}
+_new_conn = {'host': '10.7.177.42', 'port': 9030, 'username': 'root', 'password': 123456}
+_old_conn = {'host': '10.8.185.190', 'port': 9030, 'username': 'root', 'password': '!@#$411589559'}
 
 @contextmanager
 def get_doris_cur(conn):
