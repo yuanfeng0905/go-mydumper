@@ -43,10 +43,10 @@ def check(db, table):
             with get_doris_cur(_new_conn) as new_cur:
                 new_cur.execute('select count(*) from {db}.{tb}'.format(db=db, tb=table))
                 new_cnt = int(new_cur.fetchone()[0])
-                print("old db={} table={} count={}".format(db, table, new_cnt))
+                print("new db={} table={} count={}".format(db, table, new_cnt))
         except Exception as e:
             new_cnt = 0
-            print("query new table fail:%s" % e)
+            print("query new {}.{} fail:{}".format(db, table, e))
 
         if old_cnt - new_cnt > 1000:
             print("=======> need recovery {}.{}".format(db, table))
