@@ -5,10 +5,8 @@ from pymysql.connections import Connection
 import click
 import os
 
-_new_conn = {
-}
-_old_conn = {
-}
+_new_conn = {}
+_old_conn = {}
 
 
 @contextmanager
@@ -60,25 +58,28 @@ def check(db, table):
         if old_cnt - new_cnt > 1000:
             print("=======> need recovery {}.{}".format(db, table))
             return (db, table)
-    
 
 
 def dump(db, table):
+    """ 从旧数据源dump表 """
     global _new_conn, _old_conn
     code = os.system(
-        './mydumper -P {port} -h {host} -db {db} -table {table} -t 1 -u {user} -p {password} -m doris -d {dir} -vars {vars}'
-        .format(port=_new_conn['port'],
-                host=_new_conn['host'],
-                db=db,
-                table=table,
-                user=_new_conn['username'],
-                password=_new_conn['password'],
-                dir=_new_conn['dir'],
-                vars='"SET query_timeout=3600;SET exec_mem_limit=20737418240"'))
+        './mydumper -P {port} -h {host} -db {db} -table {table} -t 1 -u {user} -p {password} -m doris -d {dir} -vars {vars} -chunk-size {cs}'
+        .format(
+            port=_old_conn['port'],
+            host=_old_conn['host'],
+            db=db,
+            table=table,
+            user=_old_conn['username'],
+            password=_old_conn['password'],
+            dir=_old_conn['dir'],
+            cs=1024,  # 默认chunk size 1个G
+            vars='"SET query_timeout=3600;SET exec_mem_limit=20737418240"'))
     if code == 0:
         print("=========> {}.{} dump ok.".format(db, table))
     else:
         print("=========> {}.{} dump fail.".format(db, table))
+
 
 @click.command()
 @click.option('--old_host', type=str)
@@ -91,13 +92,15 @@ def dump(db, table):
 @click.option('--new_password', type=str)
 @click.option('--db', help='target db, will scan all tables.')
 @click.option('--dir')
-def do(db, old_host, old_port, old_user, old_password, new_host, new_port, new_user, new_password, dir):
+def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
+       new_user, new_password, dir):
     global _new_conn, _old_conn
     _old_conn = {
         'host': old_host,
         'port': old_port,
         'username': old_user,
-        'password': old_password
+        'password': old_password,
+        'dir': dir
     }
 
     _new_conn = {
@@ -105,13 +108,12 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port, new_u
         'port': new_port,
         'username': new_user,
         'password': new_password,
-        'dir': dir
-    } 
+    }
 
     print('old_conn: {}'.format(_old_conn))
     print('---------------------------------')
     print('new_conn: {}'.format(_new_conn))
-    
+
     dumps = []
     for tb in all_tables(db):
         target = check(db, tb)
@@ -120,6 +122,7 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port, new_u
 
     for db, table in dumps:
         dump(db, table)
+
 
 if __name__ == '__main__':
     do()
