@@ -73,7 +73,7 @@ def dump(db, table):
                 table=table,
                 user=_new_conn['username'],
                 password=_new_conn['password'],
-                vars='SET query_timeout=3600;SET exec_mem_limit=20737418240'))
+                vars='"SET query_timeout=3600;SET exec_mem_limit=20737418240"'))
     if code == 0:
         print("=========> {}.{} dump ok.".format(db, table))
     else:
