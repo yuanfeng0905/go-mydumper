@@ -80,14 +80,14 @@ def dump(db, table):
         print("=========> {}.{} dump fail.".format(db, table))
 
 @click.command()
-@click.option('--old_host')
-@click.option('--old_port')
-@click.option('--old_user')
-@click.option('--old_password')
-@click.option('--new_host')
-@click.option('--new_port')
-@click.option('--new_user')
-@click.option('--new_password')
+@click.option('--old_host', type=str)
+@click.option('--old_port', type=str)
+@click.option('--old_user', type=str)
+@click.option('--old_password', type=str)
+@click.option('--new_host', type=str)
+@click.option('--new_port', type=str)
+@click.option('--new_user', type=str)
+@click.option('--new_password', type=str)
 @click.option('--db', help='target db, will scan all tables.')
 def do(db, old_host, old_port, old_user, old_password, new_host, new_port, new_user, new_password):
     global _new_conn, _old_conn
