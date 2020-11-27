@@ -42,7 +42,6 @@ def all_tables(db):
 
 def check(db, table):
     global _new_conn, _old_conn
-    ret = []
     with get_doris_cur(_old_conn) as old_cur:
         old_cur.execute('select count(*) from {db}.{tb}'.format(db=db,
                                                                 tb=table))
@@ -60,7 +59,8 @@ def check(db, table):
 
         if old_cnt - new_cnt > 1000:
             print("=======> need recovery {}.{}".format(db, table))
-            ret.append((db, table))
+            return (db, table)
+    
 
 
 def dump(db, table):
@@ -111,7 +111,9 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port, new_u
     
     dumps = []
     for tb in all_tables(db):
-        dumps = check(db, tb)
+        target = check(db, tb)
+        if target:
+            dumps.append(target)
 
     for db, table in dumps:
         dump(db, table)
