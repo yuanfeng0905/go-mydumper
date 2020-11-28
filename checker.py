@@ -68,6 +68,9 @@ def check(db, table):
             new_cnt = 0
             print("query new {}.{} fail:{}".format(db, table, e))
 
+        if old_cnt == 0:
+            return False
+            
         if old_cnt - new_cnt > 1000 or new_cnt == 0:
             print("=======> need recovery {}.{}".format(db, table))
             return True
