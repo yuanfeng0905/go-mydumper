@@ -38,7 +38,6 @@ def all_dbs(db):
                     dbs.append(l[0])
     else:
         dbs.append(db)
-    print("all dbs: {}".format(dbs))
     return dbs
 
 def all_tables(db):
@@ -168,7 +167,7 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
                 dumps.append(tb)
 
         if not dumps:
-            return
+            continue
 
         # dump 差异表
         if not skip_dump:
