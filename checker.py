@@ -34,7 +34,7 @@ def all_dbs(db):
         with get_doris_cur(_old_conn) as cur:
             cur.execute('show databases')
             for l in cur.fetchall():
-                if l[0].startswith(prefix):
+                if l[0].startswith(prefix) and l[0].find('__mysql__') == -1:
                     dbs.append(l[0])
     else:
         dbs.append(db)
@@ -70,7 +70,7 @@ def check(db, table):
 
         if old_cnt == 0:
             return False
-            
+
         if old_cnt - new_cnt > 1000 or new_cnt == 0:
             print("=======> need recovery {}.{}".format(db, table))
             return True
