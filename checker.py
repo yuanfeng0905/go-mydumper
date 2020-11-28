@@ -11,21 +11,19 @@ _old_conn = {}
 
 @contextmanager
 def get_doris_cur(conn):
-    """ 获取 doris 的写连接 """
-    _connection_settings = {}
-    _connection_settings['host'] = conn['host']
-    _connection_settings['port'] = conn['port']
-    _connection_settings['user'] = conn['username']
-    _connection_settings['passwd'] = conn['password']
-    _connection_settings['use_unicode'] = True
-    _connection_settings['charset'] = 'utf8'
-    c = Connection(**_connection_settings)
+    c = Connection(host=conn['host'],
+                   port=conn['port'],
+                   user=conn['username'],
+                   passwd=conn['password'],
+                   use_unicode=True,
+                   charset='utf8')
     c.autocommit(True)
 
     cur = c.cursor()
     yield cur
     cur.close()
     c.close()
+
 
 def all_dbs(db):
     dbs = []
@@ -39,6 +37,7 @@ def all_dbs(db):
     else:
         dbs.append(db)
     return dbs
+
 
 def all_tables(db):
     tbs = []
@@ -141,8 +140,8 @@ def dump(db, table):
 @click.option('--skip_dump', is_flag=True, help='skip dump diff table.')
 @click.option('--skip_load', is_flag=True, help='skip load diff table.')
 @click.option('--force', help='force drop table', is_flag=True)
-def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
-       new_user, new_password, skip_dump, skip_load, force):
+def main(db, old_host, old_port, old_user, old_password, new_host, new_port,
+         new_user, new_password, skip_dump, skip_load, force):
     global _new_conn, _old_conn
     _old_conn = {
         'host': old_host,
@@ -182,4 +181,4 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
 
 
 if __name__ == '__main__':
-    do()
+    main()
