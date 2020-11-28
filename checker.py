@@ -51,6 +51,7 @@ def all_tables(db):
 
 
 def check(db, table):
+    print("check {}.{}...".format(db, table))
     global _new_conn, _old_conn
     with get_doris_cur(_old_conn) as old_cur:
         old_cur.execute('select count(*) from {db}.{tb}'.format(db=db,
