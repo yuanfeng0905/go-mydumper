@@ -122,17 +122,11 @@ def dump(db, table):
 @click.option('--new_user', type=str)
 @click.option('--new_password', type=str)
 @click.option('--db', help='target db, will scan all tables.')
-@click.option('--auto_dump',
-              is_flag=True,
-              default=True,
-              help='auto dump diff table.')
-@click.option('--auto_load',
-              is_flat=True,
-              default=True,
-              help='auto load diff table.')
+@click.option('--skip_dump', is_flag=True, help='skip dump diff table.')
+@click.option('--skip_load', is_flat=True, help='skip load diff table.')
 @click.option('--force', help='force drop table', is_flag=True)
 def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
-       new_user, new_password, auto_dump, auto_load, force):
+       new_user, new_password, skip_dump, skip_load, force):
     global _new_conn, _old_conn
     _old_conn = {
         'host': old_host,
@@ -162,11 +156,11 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
         return
 
     # dump 差异表
-    if auto_dump:
+    if not skip_dump:
         dump(db, ','.join(dumps))
 
     # load
-    if auto_load:
+    if not skip_load:
         load(db, force=force)
 
 
