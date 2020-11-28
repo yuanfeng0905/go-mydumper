@@ -123,7 +123,7 @@ def dump(db, table):
 @click.option('--new_password', type=str)
 @click.option('--db', help='target db, will scan all tables.')
 @click.option('--skip_dump', is_flag=True, help='skip dump diff table.')
-@click.option('--skip_load', is_flat=True, help='skip load diff table.')
+@click.option('--skip_load', is_flag=True, help='skip load diff table.')
 @click.option('--force', help='force drop table', is_flag=True)
 def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
        new_user, new_password, skip_dump, skip_load, force):
