@@ -38,6 +38,7 @@ def all_dbs(db):
                     dbs.append(l[0])
     else:
         dbs.append(db)
+    return dbs
 
 def all_tables(db):
     tbs = []
