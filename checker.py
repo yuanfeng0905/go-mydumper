@@ -27,6 +27,17 @@ def get_doris_cur(conn):
     cur.close()
     c.close()
 
+def all_dbs(db):
+    dbs = []
+    if db.endswith('*'):
+        prefix = db.replace('*', '')
+        with get_doris_cur(_old_conn) as cur:
+            cur.execute('show databases')
+            for l in cur.fetchall():
+                if l[0].startswith(prefix):
+                    dbs.append(l[0])
+    else:
+        dbs.append(db)
 
 def all_tables(db):
     tbs = []
@@ -146,22 +157,23 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
     print('---------------------------------')
     print('new_conn: {}'.format(_new_conn))
 
-    # 检查差异表
-    dumps = []
-    for tb in all_tables(db):
-        if check(db, tb):
-            dumps.append(tb)
+    for _db in all_dbs(db):
+        # 检查差异表
+        dumps = []
+        for tb in all_tables(_db):
+            if check(_db, tb):
+                dumps.append(tb)
 
-    if not dumps:
-        return
+        if not dumps:
+            return
 
-    # dump 差异表
-    if not skip_dump:
-        dump(db, ','.join(dumps))
+        # dump 差异表
+        if not skip_dump:
+            dump(_db, ','.join(dumps))
 
-    # load
-    if not skip_load:
-        load(db, force=force)
+        # load
+        if not skip_load:
+            load(_db, force=force)
 
 
 if __name__ == '__main__':
