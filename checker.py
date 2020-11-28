@@ -63,11 +63,13 @@ def check(db, table):
 def escape(s):
     return s.replace('!', "\!").replace('$', "\$")
 
+
 def gendir(db):
     dir = './dump_%s_sql' % db
     if not os.path.exists(dir):
         os.mkdir(dir)
     return dir
+
 
 def load(db, force=False):
     global _new_conn
@@ -80,7 +82,7 @@ def load(db, force=False):
         password=escape(_new_conn['password']))
     if force:
         cmd = cmd + ' -o'
-        
+
     print("cmd=%s" % cmd)
     code = os.system(cmd)
     if code == 0:
@@ -120,9 +122,17 @@ def dump(db, table):
 @click.option('--new_user', type=str)
 @click.option('--new_password', type=str)
 @click.option('--db', help='target db, will scan all tables.')
+@click.option('--auto_dump',
+              is_flag=True,
+              default=True,
+              help='auto dump diff table.')
+@click.option('--auto_load',
+              is_flat=True,
+              default=True,
+              help='auto load diff table.')
 @click.option('--force', help='force drop table', is_flag=True)
 def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
-       new_user, new_password, force):
+       new_user, new_password, auto_dump, auto_load, force):
     global _new_conn, _old_conn
     _old_conn = {
         'host': old_host,
@@ -147,15 +157,17 @@ def do(db, old_host, old_port, old_user, old_password, new_host, new_port,
     for tb in all_tables(db):
         if check(db, tb):
             dumps.append(tb)
-    
+
     if not dumps:
         return
 
     # dump 差异表
-    dump(db, ','.join(dumps))
+    if auto_dump:
+        dump(db, ','.join(dumps))
 
     # load
-    load(db, force=force)
+    if auto_load:
+        load(db, force=force)
 
 
 if __name__ == '__main__':
