@@ -137,10 +137,11 @@ def dump(db, table):
 @click.option('--new_user', type=str)
 @click.option('--new_password', type=str)
 @click.option('--db', help='target db, will scan all tables.')
+@click.option('--table', help='target table')
 @click.option('--skip_dump', is_flag=True, help='skip dump diff table.')
 @click.option('--skip_load', is_flag=True, help='skip load diff table.')
 @click.option('--force', help='force drop table', is_flag=True)
-def main(db, old_host, old_port, old_user, old_password, new_host, new_port,
+def main(db, table, old_host, old_port, old_user, old_password, new_host, new_port,
          new_user, new_password, skip_dump, skip_load, force):
     global _new_conn, _old_conn
     _old_conn = {
@@ -164,9 +165,13 @@ def main(db, old_host, old_port, old_user, old_password, new_host, new_port,
     for _db in all_dbs(db):
         # 检查差异表
         dumps = []
-        for tb in all_tables(_db):
-            if check(_db, tb):
-                dumps.append(tb)
+        if table:
+            if check(_db, table):
+                dumps.append(table)
+        else:
+            for tb in all_tables(_db):
+                if check(_db, tb):
+                    dumps.append(tb)
 
         if not dumps:
             continue
