@@ -52,7 +52,7 @@ def all_tables(db):
 def check(db, table, force):
     if force:
         return True
-        
+
     print("check {}.{}...".format(db, table))
     global _new_conn, _old_conn
     with get_doris_cur(_old_conn) as old_cur:
@@ -144,7 +144,7 @@ def dump(db, table):
 @click.option('--skip_dump', is_flag=True, help='skip dump diff table.')
 @click.option('--skip_load', is_flag=True, help='skip load diff table.')
 @click.option('--force', help='force drop table', is_flag=True)
-@click.option('--force_dump', help='force dump source db.table')
+@click.option('--force_dump', help='force dump source db.table', is_flag=True)
 def main(db, table, old_host, old_port, old_user, old_password, new_host, new_port,
          new_user, new_password, skip_dump, skip_load, force, force_dump):
     global _new_conn, _old_conn
