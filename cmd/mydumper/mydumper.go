@@ -20,8 +20,8 @@ import (
 )
 
 var (
-	flagUser, flagPasswd, flagHost, flagConfig, flagDB, flagTable, flagOutDir, flagMode, flagVars string
-	flagPort, flagThreads, flagChunkSize                                                          *int
+	flagUser, flagPasswd, flagHost, flagConfig, flagBiz, flagDB, flagTable, flagOutDir, flagMode, flagVars string
+	flagPort, flagThreads, flagChunkSize                                                                   *int
 
 	log = xlog.NewStdLog(xlog.Level(xlog.INFO))
 )
@@ -32,11 +32,12 @@ func init() {
 	flag.StringVar(&flagHost, "h", "", "The host to connect to")
 	flagPort = flag.Int("P", 3306, "TCP/IP port to connect to")
 	flag.StringVar(&flagConfig, "c", "", "config file")
+	flag.StringVar(&flagBiz, "biz", "", "source biz")
 	flag.StringVar(&flagDB, "db", "", "source db")
 	flag.StringVar(&flagTable, "table", "", "source table")
 	flag.StringVar(&flagOutDir, "d", "", "Directory of the dump to import")
 	flagThreads = flag.Int("t", 16, "Number of threads to use")
-	flag.StringVar(&flagMode, "m", "", "doris mode for support Doris MPP (default \"mysql\")")
+	flag.StringVar(&flagMode, "m", "mysql", "doris mode for support Doris MPP (default \"mysql\")")
 	flagChunkSize = flag.Int("chunk-size", 128, "default chunk size (MB)")
 	flag.StringVar(&flagVars, "vars", "", "variables")
 
@@ -57,6 +58,9 @@ func recoveryConfig(args *common.Args) {
 	}
 	if flagPasswd != "" {
 		args.Password = flagPasswd
+	}
+	if flagBiz != "" {
+		args.Biz = flagBiz
 	}
 	if flagDB != "" {
 		args.Database = flagDB

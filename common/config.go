@@ -20,7 +20,7 @@ func ParseDumperConfig(file string) (*Args, error) {
 	args := &Args{
 		StmtSize:   1000000,
 		IntervalMs: 10 * 1000,
-		Wheres:     make(map[string]string, 0),
+		Wheres:     make(map[string]string),
 	}
 
 	if file == "" {
@@ -55,6 +55,7 @@ func ParseDumperConfig(file string) (*Args, error) {
 	if err != nil {
 		return nil, err
 	}
+	biz, _ := cfg.GetString("mysql", "biz")
 	database, _ := cfg.GetString("mysql", "database")
 	outdir, err := cfg.GetString("mysql", "outdir")
 	if err != nil {
@@ -127,6 +128,7 @@ func ParseDumperConfig(file string) (*Args, error) {
 	args.Address = fmt.Sprintf("%s:%d", host, port)
 	args.User = user
 	args.Password = password
+	args.Biz = biz
 	args.Database = database
 	args.DatabaseRegexp = database_regexp
 	args.DatabaseInvertRegexp = database_invert_regexp

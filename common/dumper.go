@@ -12,6 +12,7 @@ package common
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -20,6 +21,11 @@ import (
 
 	querypb "github.com/xelabs/go-mysqlstack/sqlparser/depends/query"
 	"github.com/xelabs/go-mysqlstack/xlog"
+)
+
+const (
+	DBUS_ACTION = "dbus__action"
+	DBUS_TS     = "dbus__timestamp"
 )
 
 func writeMetaData(args *Args) {
@@ -62,12 +68,21 @@ func dumpTableSchema(log *xlog.Log, conn *Connection, args *Args, database strin
 	return nil
 }
 
+func fixDatabase(isFixed bool, biz, database string) string {
+	if isFixed {
+		return fmt.Sprintf("ods__%s__%s", biz, database)
+	}
+
+	return database
+}
+
 // doris 表导出为csv格式
 func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string, table string) {
 	var allBytes uint64
 	var allRows uint64
 	var where string
 	var extFields []string
+	var isFixed bool
 
 	fields := make([]string, 0, 16)
 	{
@@ -88,6 +103,12 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 			} else {
 				extFields = append(extFields, fmt.Sprintf("`%s`", f.Name))
 			}
+		}
+
+		// source db 非 doris, add dbus flag field
+		if fields[len(fields)-1] != DBUS_TS && fields[len(fields)-2] != DBUS_ACTION {
+			isFixed = true
+			fields = append(fields, DBUS_ACTION, DBUS_TS)
 		}
 		err = cursor.Close()
 		AssertNil(err)
@@ -149,6 +170,11 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 				}
 			}
 		}
+		// fix doris schema
+		if isFixed {
+			values = append(values, "R", strconv.Itoa(int(time.Now().Unix())))
+		}
+
 		r := strings.Join(values, "\t") // CSV 格式，\t分隔
 		rows = append(rows, r)
 
@@ -161,7 +187,8 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 		if (chunkbytes / 1024 / 1024) >= args.ChunksizeInMB {
 			inserts = append(inserts, strings.Join(fields, ","), strings.Join(rows, "\n")) // 文件首行是csv头
 			query := strings.Join(inserts, "\n")                                           // 换行
-			file := fmt.Sprintf("%s/%s.%s.%05d.csv", args.Outdir, database, table, fileNo)
+
+			file := fmt.Sprintf("%s/%s.%s.%05d.csv", args.Outdir, fixDatabase(isFixed, args.Biz, database), table, fileNo)
 			WriteFile(file, query)
 
 			log.Info("dumping.table[%s.%s].rows[%v].bytes[%vMB].part[%v].thread[%d]", database, table, allRows, (allBytes / 1024 / 1024), fileNo, conn.ID)

@@ -29,6 +29,7 @@ type Args struct {
 	ToAddress            string
 	ToDatabase           string
 	ToEngine             string
+	Biz                  string
 	Database             string
 	DatabaseRegexp       string
 	DatabaseInvertRegexp bool
