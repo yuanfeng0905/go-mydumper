@@ -125,6 +125,10 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 	chunkbytes := 0
 	rows := make([]string, 0, 256)
 	inserts := make([]string, 0, 256)
+
+	// fix to doris mode
+	database = fixDatabase(isFixed, args.Biz, database)
+
 	for cursor.Next() {
 		row, err := cursor.RowValues()
 		AssertNil(err)
@@ -188,7 +192,7 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 			inserts = append(inserts, strings.Join(fields, ","), strings.Join(rows, "\n")) // 文件首行是csv头
 			query := strings.Join(inserts, "\n")                                           // 换行
 
-			file := fmt.Sprintf("%s/%s.%s.%05d.csv", args.Outdir, fixDatabase(isFixed, args.Biz, database), table, fileNo)
+			file := fmt.Sprintf("%s/%s.%s.%05d.csv", args.Outdir, database, table, fileNo)
 			WriteFile(file, query)
 
 			log.Info("dumping.table[%s.%s].rows[%v].bytes[%vMB].part[%v].thread[%d]", database, table, allRows, (allBytes / 1024 / 1024), fileNo, conn.ID)
@@ -202,7 +206,6 @@ func dumpDorisTable(log *xlog.Log, conn *Connection, args *Args, database string
 		if len(rows) > 0 {
 			inserts = append(inserts, strings.Join(fields, ","), strings.Join(rows, "\n"))
 		}
-
 		query := strings.Join(inserts, "\n")
 		file := fmt.Sprintf("%s/%s.%s.%05d.csv", args.Outdir, database, table, fileNo)
 		WriteFile(file, query)
