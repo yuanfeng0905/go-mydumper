@@ -37,7 +37,7 @@ func init() {
 	flag.StringVar(&flagTable, "table", "", "source table")
 	flag.StringVar(&flagOutDir, "d", "", "Directory of the dump to import")
 	flagThreads = flag.Int("t", 16, "Number of threads to use")
-	flag.StringVar(&flagMode, "m", "mysql", "doris mode for support Doris MPP (default \"mysql\")")
+	flag.StringVar(&flagMode, "m", "", "doris mode for support Doris MPP (default \"mysql\")")
 	flagChunkSize = flag.Int("chunk-size", 128, "default chunk size (MB)")
 	flag.StringVar(&flagVars, "vars", "", "variables")
 
